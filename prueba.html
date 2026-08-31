@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prueba ortofoto Valledupar</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    html, body, #map { height: 100%; margin: 0; }
+    #hud {
+      position: absolute; top: 10px; right: 10px; z-index: 1000;
+      background: #fff; padding: 10px 14px; border-radius: 6px;
+      font: 13px/1.6 system-ui, sans-serif;
+      box-shadow: 0 1px 5px rgba(0,0,0,.4);
+    }
+    #hud b { font-variant-numeric: tabular-nums; }
+    #hud .ok   { color: #1a7f37; }
+    #hud .fail { color: #cf222e; }
+    #hud hr { border: 0; border-top: 1px solid #ddd; margin: 6px 0; }
+    #hud small { color: #666; }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="hud">
+  Teselas OK: <b class="ok" id="ok">0</b><br>
+  Teselas fallidas: <b class="fail" id="fail">0</b>
+  <hr>
+  <small>Zoom: <b id="z">16</b></small>
+</div>
+
+<script>
+// ---------------------------------------------------------------
+// Configuracion
+// ---------------------------------------------------------------
+const URL_ORTO = 'https://xyz1.falconprecision.co/valledupar-urbano/Z{z}/{y}/{x}.png';
+const CENTRO   = [10.4631, -73.2532];   // centro de Valledupar
+const ZOOM     = 16;
+
+// ---------------------------------------------------------------
+// Mapa
+// ---------------------------------------------------------------
+const map = L.map('map').setView(CENTRO, ZOOM);
+
+const base = L.tileLayer(
+  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  { attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 20 }
+).addTo(map);
+
+const orto = L.tileLayer(URL_ORTO, {
+  attribution: 'Ortofoto Falcon Precision',
+  minZoom: 0,
+  maxZoom: 22,
+  maxNativeZoom: 22,
+  tms: false
+}).addTo(map);
+
+L.control.layers({ "Claro": base }, { "Ortofoto": orto }).addTo(map);
+L.control.scale({ imperial: false }).addTo(map);
+
+// ---------------------------------------------------------------
+// Diagnostico
+// ---------------------------------------------------------------
+let ok = 0, fail = 0;
+const elOk   = document.getElementById('ok');
+const elFail = document.getElementById('fail');
+const elZ    = document.getElementById('z');
+
+orto.on('tileload', () => { elOk.textContent = ++ok; });
+
+orto.on('tileerror', e => {
+  elFail.textContent = ++fail;
+  console.error('TESELA FALLO:', e.tile.src);
+});
+
+map.on('zoomend', () => { elZ.textContent = map.getZoom(); });
+
+map.on('click', e => {
+  console.log('lat/lon:', e.latlng.lat.toFixed(6), e.latlng.lng.toFixed(6));
+});
+</script>
+
+</body>
+</html>
