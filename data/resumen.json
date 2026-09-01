@@ -1,0 +1,116 @@
+{
+ "corte": "20260901",
+ "generado": "2026-09-01T13:17:04",
+ "total": 129828,
+ "estados": {
+  "EN_PROCESO": 81374,
+  "CANCELADO": 1655,
+  "LISTO": 11316,
+  "ENTREGADO": 34854,
+  "ERROR_ETAPA": 629
+ },
+ "etapas": {
+  "reconocimiento": 57344,
+  "geografico": 20938,
+  "juridico": 3089
+ },
+ "tipos": {
+  "predio": 97071,
+  "matriz": 2650,
+  "unidad_ph": 30107
+ },
+ "entregas": {
+  "1": 34851,
+  "2": 1
+ },
+ "pct_entregado": 26.85,
+ "pct_listo": 8.72,
+ "avance": {
+  "universo_actual": {
+   "total": 129828,
+   "entregados": 34854,
+   "pct": 26.85
+  },
+  "universo_inicial": {
+   "total": 114567,
+   "entregados": 28209,
+   "pct": 24.62
+  },
+  "nuevos_entregados": 6645,
+  "solo_listado": 4342,
+  "nuevos_en_base": 19603
+ },
+ "por_uit": {
+  "SIN_UIT": {
+   "EN_PROCESO": 1
+  },
+  "UIT_01": {
+   "EN_PROCESO": 3325,
+   "CANCELADO": 344,
+   "LISTO": 497,
+   "ENTREGADO": 12745,
+   "ERROR_ETAPA": 42
+  },
+  "UIT_02": {
+   "EN_PROCESO": 75,
+   "ENTREGADO": 2930,
+   "CANCELADO": 36,
+   "LISTO": 613,
+   "ERROR_ETAPA": 1
+  },
+  "UIT_03": {
+   "EN_PROCESO": 10556,
+   "ENTREGADO": 7750,
+   "LISTO": 2151,
+   "CANCELADO": 542,
+   "ERROR_ETAPA": 23
+  },
+  "UIT_04": {
+   "EN_PROCESO": 6973,
+   "ENTREGADO": 4253,
+   "CANCELADO": 108,
+   "ERROR_ETAPA": 11,
+   "LISTO": 568
+  },
+  "UIT_05": {
+   "EN_PROCESO": 14882,
+   "ENTREGADO": 5812,
+   "CANCELADO": 344,
+   "LISTO": 2060,
+   "ERROR_ETAPA": 390
+  },
+  "UIT_06": {
+   "EN_PROCESO": 23452,
+   "LISTO": 1042,
+   "CANCELADO": 155,
+   "ENTREGADO": 450,
+   "ERROR_ETAPA": 8
+  },
+  "UIT_07": {
+   "ENTREGADO": 914,
+   "EN_PROCESO": 22110,
+   "CANCELADO": 126,
+   "LISTO": 4385,
+   "ERROR_ETAPA": 154
+  }
+ },
+ "calidad": {
+  "pendientes_sin_npn": 2518,
+  "comision_terreno": 6480,
+  "comision_construccion": 11831,
+  "omision_terreno": 4228,
+  "omision_construccion": 9450,
+  "ph_sin_lote": 559,
+  "errores_etapa": 627
+ },
+ "puntos_en_mapa": 125041,
+ "opcionales": [
+  "comision_terreno",
+  "comision_construccion",
+  "omision_terreno",
+  "omision_construccion",
+  "pendientes_terreno",
+  "pendientes_terreno_inf",
+  "pendientes_unidad_inf"
+ ]
+}
