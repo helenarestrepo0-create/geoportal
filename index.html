@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/rbush@4.0.1/rbush.min.js"></script>
+<script src="https://unpkg.com/flatgeobuf@3.36.0/dist/flatgeobuf-geojson.min.js"></script>
 
 <style>
 :root{
@@ -349,7 +350,7 @@ const S = {
   seleccion:null, hover:null,
   ambito:'todos',
   orden:{campo:'npn', asc:true},
-  zonas:{}
+  zonas:{}, poli:{}, volando:false
 };
 
 /* ── mapa ── */
@@ -371,6 +372,7 @@ const etiquetas = L.tileLayer(
    maxNativeZoom:20, pane:'shadowPane'}).addTo(map);
 
 map.createPane('zonas');   map.getPane('zonas').style.zIndex = 410;
+map.createPane('poli');    map.getPane('poli').style.zIndex    = 430;
 map.createPane('calidad'); map.getPane('calidad').style.zIndex = 440;
 map.createPane('pts');     map.getPane('pts').style.zIndex = 460;
 map.createPane('resalte'); map.getPane('resalte').style.zIndex = 480;
@@ -414,8 +416,10 @@ async function arrancar(){
     pintarCabecera();
     pintarFiltros();
     pintarCapas();
+    inicializarPoligonos();
     pintarEncabezadoTabla();
     aplicarFiltros();
+    dibujarPoligonos();
 
     document.getElementById('carga').style.display = 'none';
     traer('ficha.json', false).then(f => { S.ficha = f; });
@@ -684,7 +688,19 @@ document.addEventListener('click', e => {
 
 /* ── dibujo ── */
 let pend = null;
-const redibujar = () => { clearTimeout(pend); pend = setTimeout(_redibujar, 80); };
+const redibujar = () => {
+  clearTimeout(pend);
+  pend = setTimeout(() => { if(!S.volando) _redibujar(); }, 80);
+};
+
+// mientras dura el vuelo no se redibuja: evita el tirón a media animación
+map.on('zoomstart movestart', () => { if(S.volando) clearTimeout(pend); });
+map.on('moveend', () => {
+  if(!S.volando) return;
+  S.volando = false;
+  _redibujar();
+  dibujarPoligonos();
+});
 
 function _redibujar(){
   capaPts.clearLayers();
@@ -727,7 +743,7 @@ function _redibujar(){
   if(S.ambito === 'vis') pintarTabla();
 }
 
-map.on('moveend zoomend', redibujar);
+map.on('moveend zoomend', () => { redibujar(); dibujarPoligonos(); });
 
 /* hover y clic: un solo listener + búsqueda en el índice espacial */
 const tt = document.getElementById('tt');
@@ -789,6 +805,151 @@ function resaltar(i){
     pane:'resalte', radius:11, color:'#4cc2ff', weight:2.5,
     fillColor:'#4cc2ff', fillOpacity:.2, interactive:false
   }).addTo(capaResalte);
+}
+
+/* ══════════ POLIGONOS (terreno y construccion) ══════════
+
+   Se leen de FlatGeobuf por rango HTTP: el navegador descarga solo los
+   bytes del area visible, no el archivo entero. Cada capa aparece a
+   partir de su zoom minimo, porque a escalas amplias no se distinguen
+   y solo gastarian memoria.                                          */
+
+function inicializarPoligonos(){
+  const cfg = (S.resumen && S.resumen.poligonos) || {};
+  const cont = document.getElementById('lista-capas');
+
+  for(const id in cfg){
+    const c = cfg[id];
+    const capa = L.geoJSON(null, {
+      pane:'poli',
+      renderer: L.canvas({pane:'poli', padding:.2}),
+      interactive:false,
+      style: f => {
+        const col = (ESTADOS[f.properties.e] || {}).color || c.color;
+        return {color:c.color, weight:1, opacity:.85,
+                fillColor:col, fillOpacity:c.relleno};
+      }
+    });
+    S.poli[id] = {
+      cfg:c, capa:capa,
+      activa:true,                              // el usuario puede apagarla
+      cargados:new Set(),                       // celdas ya traidas
+      vistos:new Set(),                         // features ya dibujados
+      unico:(id === 'terrenos'),                // 1 poligono por predio
+      fgb:/\.fgb$/i.test(c.archivo),
+      cargando:false, todo:false, reintento:false
+    };
+    cont.appendChild(filaCapa(c.label, c.color, null, true, c.n,
+      on => { S.poli[id].activa = on;
+              if(!on) map.removeLayer(capa); else dibujarPoligonos(); }));
+  }
+}
+
+/* Rejilla de descarga: el mapa se divide en celdas fijas y se pide
+   una sola vez cada celda. Sin esto, cada paneo minimo relanzaria
+   la lectura de una zona ya traida.                                */
+const CELDA_POLI = 0.006;   // ~660 m
+
+function celdasDe(b){
+  const r = [];
+  for(let x = Math.floor(b.getWest()/CELDA_POLI);
+          x <= Math.floor(b.getEast()/CELDA_POLI); x++)
+    for(let y = Math.floor(b.getSouth()/CELDA_POLI);
+            y <= Math.floor(b.getNorth()/CELDA_POLI); y++)
+      r.push(x + ':' + y);
+  return r;
+}
+
+let pendPoli = null;
+function dibujarPoligonos(){
+  clearTimeout(pendPoli);
+  pendPoli = setTimeout(_dibujarPoligonos, 260);
+}
+
+async function _dibujarPoligonos(){
+  const z = map.getZoom();
+
+  for(const id in S.poli){
+    const P = S.poli[id];
+
+    if(!P.activa || z < P.cfg.zoom_min){
+      if(map.hasLayer(P.capa)) map.removeLayer(P.capa);
+      continue;
+    }
+    if(!map.hasLayer(P.capa)) P.capa.addTo(map);
+
+    const b = map.getBounds().pad(.12);
+    const nuevas = celdasDe(b).filter(c => !P.cargados.has(c));
+    if(!nuevas.length) continue;
+
+    if(P.cargando) continue;          // una lectura a la vez por capa
+    P.cargando = true;
+    nuevas.forEach(c => P.cargados.add(c));
+
+    try{
+      if(P.fgb){
+        const it = flatgeobuf.deserialize(CFG.datos + P.cfg.archivo, {
+          minX:b.getWest(),  minY:b.getSouth(),
+          maxX:b.getEast(),  maxY:b.getNorth()
+        });
+        let n = 0;
+        for await (const f of it){
+          // la consulta por caja repite lo ya traido: se descarta aqui
+          n++;
+          if(P.unico && P.vistos.has(f.properties.i)) continue;
+          P.capa.addData(f);
+          if(P.unico) P.vistos.add(f.properties.i);
+          if(n % 400 === 0) await new Promise(r => setTimeout(r, 0));
+        }
+      }else if(!P.todo){
+        P.todo = true;               // GeoJSON: un solo archivo, una vez
+        const d = await traer(P.cfg.archivo, false);
+        if(d) P.capa.addData(d);
+      }
+    }catch(e){
+      console.warn('polígonos ' + id + ':', e.message);
+      nuevas.forEach(c => P.cargados.delete(c));   // permitir reintento
+      if(P.fgb && !P.reintento){
+        P.reintento = true;          // el servidor no admite rangos:
+        P.fgb = false;               // se cae a lectura completa
+      }
+    }finally{
+      P.cargando = false;
+    }
+  }
+}
+
+/* Resalta el lote del predio abierto. Si los terrenos ya estan
+   dibujados, se busca ahi; si no, se pide solo esa area.          */
+async function resaltarLote(i){
+  const P = S.poli.terrenos;
+  if(!P) return;
+
+  let hallado = false;
+  P.capa.eachLayer(l => {
+    if(hallado || !l.feature || l.feature.properties.i !== i) return;
+    hallado = true;
+    L.geoJSON(l.feature, {pane:'resalte', interactive:false,
+      style:{color:'#4cc2ff', weight:2.5,
+             fillColor:'#4cc2ff', fillOpacity:.18}}).addTo(capaResalte);
+  });
+  if(hallado || !P.fgb) return;
+
+  const p = S.porFila.get(i);
+  if(!p) return;
+  const d = 0.0012;
+  try{
+    const it = flatgeobuf.deserialize(CFG.datos + P.cfg.archivo,
+      {minX:p.x-d, minY:p.y-d, maxX:p.x+d, maxY:p.y+d});
+    for await (const f of it){
+      if(f.properties.i !== i) continue;
+      if(S.seleccion !== i) return;        // ya cambio la seleccion
+      L.geoJSON(f, {pane:'resalte', interactive:false,
+        style:{color:'#4cc2ff', weight:2.5,
+               fillColor:'#4cc2ff', fillOpacity:.18}}).addTo(capaResalte);
+      break;
+    }
+  }catch(e){ /* sin lote propio: se queda el circulo */ }
 }
 
 /* ── cabecera ── */
@@ -853,6 +1014,7 @@ function abrirFicha(i){
   if(!fila) return;
   S.seleccion = i;
   resaltar(i);
+  resaltarLote(i);
 
   document.getElementById('f-npn').textContent = fila[S.col.npn];
   const est = S.val(fila,'estado');
@@ -1097,7 +1259,7 @@ document.getElementById('g-csv').onclick = () => {
 };
 
 /* ── capas ── */
-function filaCapa(label, color, capa, activa, n){
+function filaCapa(label, color, capa, activa, n, alCambiar){
   const div = document.createElement('label');
   div.className = 'fila-capa';
   div.innerHTML = '<input type="checkbox"' + (activa ? ' checked' : '') + '>'
@@ -1105,6 +1267,7 @@ function filaCapa(label, color, capa, activa, n){
     + '<span>' + label + '</span>'
     + (n != null ? '<span class="n mono">' + nf(n) + '</span>' : '');
   div.querySelector('input').onchange = e => {
+    if(alCambiar) return alCambiar(e.target.checked);
     if(!capa) return;
     if(e.target.checked) capa.addTo(map); else map.removeLayer(capa);
   };
@@ -1189,12 +1352,34 @@ function volarAZona(tipo, valor){
   quitarZona();
   const ref = S.zonas[tipo];
   if(!ref || !valor) return;
+
+  let caja = null;
   ref.capa.eachLayer(l => {
     if(String(l.feature.properties[ref.campo]) !== valor) return;
     l.setStyle({weight:ref.est.weight + 2, opacity:1, fillOpacity:.14,
                 color:'#4cc2ff'});
     l.bringToFront();
-    map.flyToBounds(l.getBounds(), {padding:[70,70], duration:.75, maxZoom:18});
+    caja = caja ? caja.extend(l.getBounds()) : l.getBounds();
+  });
+  if(caja) encuadrar(caja);
+}
+
+/* Encuadra una zona dejándola visible entre los paneles.
+   Los paneles flotan sobre el mapa, así que el centro geométrico
+   no es el centro visible: el padding se calcula por lado. */
+function encuadrar(caja){
+  const anchoPanelIzq = window.innerWidth > 1000 ? 600 : 40;
+  const anchoPanelDer = document.getElementById('ficha')
+                          .classList.contains('abierta') ? 330 : 40;
+  const alturaGaveta = document.getElementById('gaveta')
+                         .classList.contains('abierta') ? 60 : 40;
+
+  S.volando = true;
+  map.flyToBounds(caja, {
+    paddingTopLeft:     [anchoPanelIzq, 40],
+    paddingBottomRight: [anchoPanelDer, alturaGaveta],
+    duration: .85,
+    easeLinearity: .25
   });
 }
 
