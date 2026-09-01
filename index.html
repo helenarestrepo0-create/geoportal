@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Avance catastral · Valledupar</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -11,229 +11,275 @@
 
 <style>
 :root{
-  --tinta:#10161c;          /* fondo de paneles */
-  --tinta-2:#1a232c;
-  --linea:#2c3946;
-  --texto:#e6edf3;
-  --texto-2:#8fa3b5;
-
+  --tinta:#0e141a;
+  --tinta-2:#18222b;
+  --linea:#2b3844;
+  --linea-2:#3a4a58;
+  --texto:#e8eff5;
+  --texto-2:#8ea3b6;
+  --texto-3:#5f7386;
+  --foco:#4cc2ff;
   --entregado:#22c55e;
   --listo:#38bdf8;
   --proceso:#f5a524;
-  --error:#f4426c;
-  --cancelado:#7c8b99;
-  --sin-matriz:#a78bfa;
-
-  --comision:#e53935;
-  --omision:#8e24aa;
-  --pendiente:#9e9e9e;
+  --gaveta:0px;
 }
-
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow:hidden}
 body{
   font:14px/1.45 "IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  color:var(--texto); background:#0b1116;
+  color:var(--texto); background:#080d12; -webkit-font-smoothing:antialiased;
 }
-#mapa{position:absolute;inset:0;background:#0b1116}
-
+#mapa{position:absolute;top:0;left:0;right:0;bottom:var(--gaveta);background:#080d12;
+      transition:bottom .22s cubic-bezier(.4,0,.2,1)}
 .mono{font-family:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
       font-variant-numeric:tabular-nums}
+button{font:inherit}
+:focus-visible{outline:2px solid var(--foco);outline-offset:2px}
 
-/* ---------- paneles flotantes ---------- */
 .panel{
-  position:absolute; z-index:600;
-  background:rgba(16,22,28,.94);
-  border:1px solid var(--linea);
-  border-radius:4px;
-  backdrop-filter:blur(6px);
-  box-shadow:0 8px 28px rgba(0,0,0,.55);
+  position:absolute;z-index:600;background:rgba(14,20,26,.95);
+  border:1px solid var(--linea);border-radius:5px;
+  backdrop-filter:blur(8px);box-shadow:0 10px 32px rgba(0,0,0,.6);
 }
 
-/* --- cabecera --- */
-#cabecera{
-  top:12px; left:12px; right:auto;
-  padding:14px 18px 12px; min-width:290px; max-width:330px;
-}
-#cabecera h1{
-  margin:0 0 2px; font-size:15px; font-weight:600; letter-spacing:-.01em;
-}
-#cabecera .sub{color:var(--texto-2); font-size:11.5px; margin-bottom:14px}
-
-.cifra{display:flex; align-items:baseline; gap:9px; margin-bottom:3px}
-.cifra .n{font-size:34px; font-weight:600; letter-spacing:-.03em; line-height:1}
-.cifra .pct{font-size:14px; color:var(--entregado); font-weight:600}
-.cifra-pie{color:var(--texto-2); font-size:11.5px; margin-bottom:14px}
-
-.medidor{height:5px; background:#111b22; border-radius:3px; overflow:hidden;
-         display:flex; margin-bottom:14px}
-.medidor i{display:block; height:100%}
-
-table.tot{width:100%; border-collapse:collapse; font-size:12.5px}
-table.tot td{padding:3px 0; border:0}
+#cabecera{top:12px;left:12px;width:296px;padding:14px 17px 13px}
+#cabecera h1{margin:0 0 2px;font-size:15px;font-weight:600;letter-spacing:-.01em}
+#cabecera .sub{color:var(--texto-2);font-size:11.5px;margin-bottom:13px}
+.cifra{display:flex;align-items:baseline;gap:9px}
+.cifra .n{font-size:33px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.cifra .pct{font-size:14px;color:var(--entregado);font-weight:600}
+.cifra-pie{color:var(--texto-2);font-size:11.5px;margin:3px 0 13px}
+.medidor{height:5px;background:#101a22;border-radius:3px;overflow:hidden;
+         display:flex;margin-bottom:13px}
+.medidor i{display:block;height:100%;transition:width .25s ease}
+table.tot{width:100%;border-collapse:collapse;font-size:12.5px}
+table.tot td{padding:3.5px 0;border:0}
 table.tot td:last-child{text-align:right}
-table.tot .marca{
-  display:inline-block; width:9px; height:9px; border-radius:2px;
-  margin-right:7px; vertical-align:-1px;
-}
-table.tot tr{cursor:pointer}
+table.tot tr{cursor:pointer;transition:opacity .15s}
 table.tot tr:hover td{color:#fff}
-table.tot tr.off{opacity:.32}
+table.tot tr.off{opacity:.3}
+.marca{display:inline-block;width:9px;height:9px;border-radius:2px;
+       margin-right:8px;vertical-align:-1px}
+.divisor{height:1px;background:var(--linea);margin:12px 0 11px}
+.dual{font-size:11.5px;color:var(--texto-2);line-height:1.75}
+.dual b{color:var(--texto);font-weight:600}
 
-.divisor{height:1px; background:var(--linea); margin:13px 0 11px}
+#filtros{top:12px;left:320px;width:262px;padding:13px 15px 14px}
+#filtros .titulo{font-size:11px;color:var(--texto-2);margin-bottom:10px}
+.campo{margin-bottom:9px}
+.campo label{display:block;font-size:11px;color:var(--texto-3);margin-bottom:3px}
+.campo select,.campo input{
+  width:100%;background:#0a1016;border:1px solid var(--linea);color:var(--texto);
+  border-radius:4px;padding:6px 9px;font-size:12.5px;transition:border-color .15s;
+}
+.campo select:hover,.campo input:hover{border-color:var(--linea-2)}
+.campo select:focus,.campo input:focus{border-color:var(--foco);outline:none}
+.campo input::placeholder{color:var(--texto-3)}
+#buscar-wrap{position:relative}
+#sugerencias{
+  position:absolute;top:100%;left:0;right:0;z-index:20;margin-top:3px;
+  background:var(--tinta);border:1px solid var(--linea-2);border-radius:4px;
+  max-height:210px;overflow-y:auto;display:none;box-shadow:0 8px 22px rgba(0,0,0,.6);
+}
+#sugerencias.abierto{display:block}
+.sug{padding:7px 10px;cursor:pointer;font-size:12px;
+     border-bottom:1px solid rgba(43,56,68,.6)}
+.sug:last-child{border:0}
+.sug:hover,.sug.activo{background:var(--tinta-2)}
+.sug .meta{color:var(--texto-3);font-size:10.5px;margin-top:1px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.chip-f{display:inline-flex;align-items:center;gap:6px;background:var(--tinta-2);
+        border:1px solid var(--linea-2);border-radius:12px;
+        padding:3px 5px 3px 10px;font-size:11px}
+.chip-f button{background:none;border:0;color:var(--texto-2);cursor:pointer;
+               font-size:14px;line-height:1;padding:0 3px}
+.chip-f button:hover{color:#fff}
+#resultado{margin-top:11px;padding-top:11px;border-top:1px solid var(--linea);
+           font-size:12px;color:var(--texto-2);line-height:1.7}
+#resultado b{color:var(--texto);font-weight:600}
+#resultado .grande{font-size:19px;font-weight:600;color:var(--texto);
+                   letter-spacing:-.02em}
 
-.dual{font-size:11.5px; color:var(--texto-2); line-height:1.7}
-.dual b{color:var(--texto); font-weight:600}
-
-/* --- capas --- */
-#capas{
-  bottom:12px; left:12px; padding:11px 14px 12px; min-width:250px;
-}
-#capas .titulo{
-  font-size:11px; color:var(--texto-2); margin-bottom:9px;
-}
-.fila-capa{
-  display:flex; align-items:center; gap:9px; padding:4px 0;
-  cursor:pointer; font-size:12.5px; user-select:none;
-}
+#capas{bottom:calc(var(--gaveta) + 12px);left:12px;width:250px;
+       padding:11px 14px 12px;transition:bottom .22s cubic-bezier(.4,0,.2,1)}
+#capas .titulo{font-size:11px;color:var(--texto-2);margin-bottom:8px}
+.fila-capa{display:flex;align-items:center;gap:9px;padding:4px 0;
+           cursor:pointer;font-size:12.5px;user-select:none}
 .fila-capa:hover{color:#fff}
-.fila-capa input{accent-color:#38bdf8; margin:0; cursor:pointer}
-.fila-capa .n{margin-left:auto; color:var(--texto-2); font-size:11.5px}
-.fila-capa .pin{
-  width:9px;height:9px;border-radius:2px;flex:none;
-}
-
-#capas details{margin-top:8px}
-#capas summary{
-  cursor:pointer; font-size:11px; color:var(--texto-2); outline:none;
-  padding:3px 0;
-}
+.fila-capa input{accent-color:var(--foco);margin:0;cursor:pointer}
+.fila-capa .n{margin-left:auto;color:var(--texto-3);font-size:11px}
+.pin{width:9px;height:9px;border-radius:2px;flex:none}
+#capas details{margin-top:7px}
+#capas summary{cursor:pointer;font-size:11px;color:var(--texto-2);padding:3px 0}
 #capas summary:hover{color:var(--texto)}
-.aviso{
-  font-size:11px; color:#f5a524; line-height:1.5; margin:7px 0 4px;
-}
+.aviso{font-size:11px;color:var(--proceso);line-height:1.5;margin:7px 0 4px}
 
-/* --- ficha del predio --- */
-#ficha{
-  top:12px; right:12px; width:308px; max-height:calc(100vh - 24px);
-  padding:0; display:none; overflow:hidden; flex-direction:column;
-}
+#ficha{top:12px;right:12px;width:306px;
+       max-height:calc(100vh - var(--gaveta) - 24px);
+       padding:0;display:none;overflow:hidden;flex-direction:column}
 #ficha.abierta{display:flex}
-#ficha .cab{
-  padding:13px 15px 11px; border-bottom:1px solid var(--linea);
-  display:flex; align-items:flex-start; gap:10px;
-}
-#ficha .npn{font-size:13px; letter-spacing:.01em; word-break:break-all; line-height:1.4}
-#ficha .cerrar{
-  margin-left:auto; background:none; border:0; color:var(--texto-2);
-  font-size:19px; line-height:1; cursor:pointer; padding:0 2px;
-}
+#ficha .cab{padding:12px 15px 11px;border-bottom:1px solid var(--linea);
+            display:flex;align-items:flex-start;gap:10px}
+#ficha .npn{font-size:13px;word-break:break-all;line-height:1.4}
+#ficha .cerrar{margin-left:auto;background:none;border:0;color:var(--texto-2);
+               font-size:19px;line-height:1;cursor:pointer;padding:0 2px}
 #ficha .cerrar:hover{color:#fff}
-#ficha .cuerpo{padding:5px 15px 15px; overflow-y:auto}
+#ficha .cuerpo{padding:4px 15px 15px;overflow-y:auto}
+.chip{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;
+      font-weight:600;margin:9px 0 2px}
+dl.attr{margin:0;font-size:12.5px}
+dl.attr div{display:flex;gap:10px;padding:5px 0;
+            border-bottom:1px solid rgba(43,56,68,.5)}
+dl.attr dt{color:var(--texto-2);flex:0 0 44%;font-size:11.5px}
+dl.attr dd{margin:0;flex:1;text-align:right;word-break:break-word}
 
-.chip{
-  display:inline-block; padding:2px 9px; border-radius:11px;
-  font-size:11px; font-weight:600; margin:9px 0 2px;
-}
+#gaveta{position:absolute;left:0;right:0;bottom:0;z-index:700;height:0;
+        background:rgba(14,20,26,.97);border-top:1px solid var(--linea);
+        display:flex;flex-direction:column;backdrop-filter:blur(8px);
+        transition:height .22s cubic-bezier(.4,0,.2,1)}
+#gaveta.abierta{height:290px}
+#gaveta .barra{display:flex;align-items:center;gap:13px;padding:9px 14px;
+               border-bottom:1px solid var(--linea);flex:none}
+#gaveta .barra .tit{font-size:12.5px;font-weight:600}
+#gaveta .barra .cuenta{color:var(--texto-2);font-size:11.5px}
+.seg{display:flex;background:#0a1016;border:1px solid var(--linea);border-radius:4px}
+.seg button{background:none;border:0;color:var(--texto-2);padding:4px 12px;
+            font-size:11.5px;cursor:pointer;border-radius:3px;transition:.12s}
+.seg button.on{background:var(--tinta-2);color:var(--texto)}
+.seg button:hover{color:var(--texto)}
+.btn{background:#0a1016;border:1px solid var(--linea);color:var(--texto-2);
+     border-radius:4px;padding:4px 11px;font-size:11.5px;cursor:pointer;
+     transition:.12s}
+.btn:hover{border-color:var(--linea-2);color:var(--texto)}
+#g-cerrar{margin-left:auto;background:none;border:0;color:var(--texto-2);
+          font-size:19px;cursor:pointer;line-height:1;padding:0 4px}
+#g-cerrar:hover{color:#fff}
+#scroll{flex:1;overflow-y:auto;position:relative}
+#tabla{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+#tabla thead th{position:sticky;top:0;z-index:2;background:#141d25;text-align:left;
+  font-weight:600;font-size:11px;color:var(--texto-2);padding:7px 11px;
+  border-bottom:1px solid var(--linea);cursor:pointer;white-space:nowrap;
+  user-select:none}
+#tabla thead th:hover{color:var(--texto)}
+#tabla thead th .flecha{opacity:.45;margin-left:4px;font-size:9px}
+#tabla td{padding:5px 11px;border-bottom:1px solid rgba(43,56,68,.35);
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tabla tbody tr{cursor:pointer}
+#tabla tbody tr:hover{background:rgba(76,194,255,.09)}
+#tabla tbody tr.sel{background:rgba(76,194,255,.16)}
+.punto-est{display:inline-block;width:7px;height:7px;border-radius:50%;
+           margin-right:7px;vertical-align:0}
+#abrir-tabla{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+             z-index:600;padding:7px 17px;font-size:12px}
+#gaveta.abierta ~ #abrir-tabla{display:none}
 
-dl.attr{margin:0; font-size:12.5px}
-dl.attr div{
-  display:flex; gap:10px; padding:5px 0;
-  border-bottom:1px solid rgba(44,57,70,.5);
-}
-dl.attr dt{color:var(--texto-2); flex:0 0 44%; font-size:11.5px}
-dl.attr dd{margin:0; flex:1; text-align:right; word-break:break-word}
+#estado{bottom:calc(var(--gaveta) + 12px);right:12px;padding:7px 13px;
+        font-size:11.5px;color:var(--texto-2);
+        transition:bottom .22s cubic-bezier(.4,0,.2,1)}
+#estado b{color:var(--texto);font-weight:600}
 
-/* --- barra inferior derecha --- */
-#estado{
-  bottom:12px; right:12px; padding:7px 13px; font-size:11.5px;
-  color:var(--texto-2);
-}
-#estado b{color:var(--texto); font-weight:600}
-
-/* --- carga --- */
-#carga{
-  position:absolute; inset:0; z-index:1200; display:flex;
-  align-items:center; justify-content:center; flex-direction:column;
-  gap:13px; background:#0b1116; color:var(--texto-2); font-size:13px;
-}
-#carga .barra{width:190px;height:2px;background:#1c2731;overflow:hidden}
-#carga .barra i{display:block;height:100%;width:38%;background:#38bdf8;
-  animation:desliza 1.05s ease-in-out infinite}
+#carga{position:absolute;inset:0;z-index:1200;display:flex;align-items:center;
+       justify-content:center;flex-direction:column;gap:13px;background:#080d12;
+       color:var(--texto-2);font-size:13px}
+#carga .barra{width:190px;height:2px;background:#1a242e;overflow:hidden}
+#carga .barra i{display:block;height:100%;width:38%;background:var(--foco);
+                animation:desliza 1.05s ease-in-out infinite}
 @keyframes desliza{0%{transform:translateX(-100%)}100%{transform:translateX(360%)}}
 
-.leaflet-control-attribution{
-  background:rgba(16,22,28,.85)!important; color:var(--texto-2)!important;
-  font-size:10px!important;
-}
-.leaflet-control-attribution a{color:#7fb4d6!important}
-.leaflet-control-zoom a{
-  background:rgba(16,22,28,.94)!important; color:var(--texto)!important;
-  border-color:var(--linea)!important;
-}
-.leaflet-control-zoom a:hover{background:var(--tinta-2)!important}
-.leaflet-control-scale-line{
-  background:rgba(16,22,28,.8)!important; color:var(--texto)!important;
-  border-color:var(--linea)!important;
-}
+.tt-predio{position:absolute;z-index:650;pointer-events:none;display:none;
+  background:rgba(14,20,26,.96);border:1px solid var(--linea-2);border-radius:4px;
+  padding:6px 10px;font-size:11.5px;line-height:1.5;white-space:nowrap;
+  box-shadow:0 6px 18px rgba(0,0,0,.55)}
+.tt-predio .e{font-size:10.5px;color:var(--texto-2)}
 
-@media (max-width:820px){
-  #cabecera{max-width:none; right:12px; min-width:0}
-  #ficha{top:auto; bottom:12px; left:12px; right:12px; width:auto; max-height:52vh}
-  #capas,#estado{display:none}
+.leaflet-control-attribution{background:rgba(14,20,26,.85)!important;
+  color:var(--texto-3)!important;font-size:10px!important}
+.leaflet-control-attribution a{color:#7fb4d6!important}
+.leaflet-control-zoom a{background:rgba(14,20,26,.95)!important;
+  color:var(--texto)!important;border-color:var(--linea)!important}
+.leaflet-control-zoom a:hover{background:var(--tinta-2)!important}
+.leaflet-control-scale-line{background:rgba(14,20,26,.8)!important;
+  color:var(--texto)!important;border-color:var(--linea)!important}
+.leaflet-tooltip.zona{background:rgba(14,20,26,.95);border:1px solid var(--linea-2);
+  color:var(--texto);font-size:11.5px;box-shadow:none}
+.leaflet-tooltip.zona::before{display:none}
+
+@media (max-width:1000px){
+  #filtros{left:12px;top:auto;bottom:calc(var(--gaveta) + 12px);width:296px}
+  #capas{display:none}
+}
+@media (max-width:720px){
+  #cabecera{width:auto;right:12px}
+  #filtros{right:12px;width:auto}
+  #ficha{top:auto;bottom:calc(var(--gaveta) + 12px);left:12px;right:12px;
+         width:auto;max-height:46vh}
+  #estado{display:none}
+  #gaveta.abierta{height:230px}
 }
 </style>
 </head>
 <body>
 
 <div id="mapa"></div>
+<div class="tt-predio" id="tt"></div>
 
 <div id="carga">
   <div>Cargando predios…</div>
   <div class="barra"><i></i></div>
-  <div id="carga-detalle" style="font-size:11.5px"></div>
+  <div id="carga-detalle" style="font-size:11.5px;color:#5f7386"></div>
 </div>
 
-<!-- ---------- cabecera ---------- -->
 <div class="panel" id="cabecera">
   <h1>Avance de actualización catastral</h1>
   <div class="sub" id="sub">Valledupar · corte —</div>
-
   <div class="cifra">
     <span class="n mono" id="c-entregado">—</span>
     <span class="pct mono" id="c-pct"></span>
   </div>
   <div class="cifra-pie">predios entregados</div>
-
   <div class="medidor" id="medidor"></div>
-
   <table class="tot"><tbody id="totales"></tbody></table>
-
   <div class="divisor"></div>
-
   <div class="dual" id="dual"></div>
 </div>
 
-<!-- ---------- capas ---------- -->
+<div class="panel" id="filtros">
+  <div class="titulo">Filtrar</div>
+  <div class="campo" id="buscar-wrap">
+    <label for="q">Buscar predio, barrio o manzana</label>
+    <input id="q" type="search" placeholder="NPN, nombre o manzana" autocomplete="off">
+    <div id="sugerencias"></div>
+  </div>
+  <div class="campo">
+    <label for="f-uit">Unidad de intervención</label>
+    <select id="f-uit"><option value="">Todas</option></select>
+  </div>
+  <div class="campo">
+    <label for="f-barrio">Barrio</label>
+    <select id="f-barrio"><option value="">Todos</option></select>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div id="resultado"></div>
+</div>
+
 <div class="panel" id="capas">
   <div class="titulo">Capas</div>
   <div id="lista-capas"></div>
-
   <details id="det-calidad">
     <summary>Revisión de calidad</summary>
-    <div class="aviso">Estas capas no cuentan en el avance. Revísalas antes de publicar.</div>
+    <div class="aviso">No cuentan en el avance. Revísalas antes de publicar.</div>
     <div id="lista-calidad"></div>
   </details>
 </div>
 
-<!-- ---------- ficha ---------- -->
 <div class="panel" id="ficha">
   <div class="cab">
     <div>
       <div style="font-size:11px;color:var(--texto-2)">Predio</div>
       <div class="npn mono" id="f-npn"></div>
     </div>
-    <button class="cerrar" id="f-cerrar" aria-label="Cerrar">×</button>
+    <button class="cerrar" id="f-cerrar" aria-label="Cerrar ficha">×</button>
   </div>
   <div class="cuerpo">
     <span class="chip" id="f-chip"></span>
@@ -241,166 +287,407 @@ dl.attr dd{margin:0; flex:1; text-align:right; word-break:break-word}
   </div>
 </div>
 
+<button class="panel btn" id="abrir-tabla">Ver tabla de predios</button>
+
+<div id="gaveta">
+  <div class="barra">
+    <span class="tit">Predios</span>
+    <span class="cuenta mono" id="g-cuenta">—</span>
+    <div class="seg">
+      <button id="g-todos" class="on">Todos</button>
+      <button id="g-vis">En pantalla</button>
+    </div>
+    <button class="btn" id="g-csv">Exportar CSV</button>
+    <button id="g-cerrar" aria-label="Cerrar tabla">×</button>
+  </div>
+  <div id="scroll">
+    <table id="tabla">
+      <thead><tr id="thead"></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
 <div class="panel" id="estado">
-  <b id="e-vis">0</b> visibles · zoom <b id="e-zoom">15</b>
+  <b id="e-vis">0</b> en pantalla · zoom <b id="e-zoom">14</b>
 </div>
 
 <script>
-/* ==========================================================
-   CONFIGURACION
-   ========================================================== */
+"use strict";
+
 const CFG = {
-  datos: 'data/',
-  orto:  'https://xyz1.falconprecision.co/valledupar-urbano/Z{z}/{y}/{x}.png',
-  centro: [10.4631, -73.2532],
-  zoom: 14,
-  limites: [[10.38, -73.32], [10.55, -73.18]],
-  zoomPuntos: 15          // debajo de esto no se dibujan puntos
+  datos:'data/',
+  orto:'https://xyz1.falconprecision.co/valledupar-urbano/Z{z}/{y}/{x}.png',
+  centro:[10.4631,-73.2532], zoom:14,
+  limites:[[10.38,-73.32],[10.55,-73.18]],
+  zoomPuntos:15,
+  filaAlto:26
 };
 
 const ESTADOS = {
-  ENTREGADO:   {label:'Entregado',        color:'#22c55e'},
-  LISTO:       {label:'Listo para SIG',   color:'#38bdf8'},
-  EN_PROCESO:  {label:'En proceso',       color:'#f5a524'},
-  ERROR_ETAPA: {label:'Error de etapa',   color:'#f4426c'},
-  CANCELADO:   {label:'Cancelado',        color:'#7c8b99'},
-  SIN_MATRIZ:  {label:'Sin matriz',       color:'#a78bfa'}
+  ENTREGADO:  {label:'Entregado',      color:'#22c55e'},
+  LISTO:      {label:'Listo para SIG', color:'#38bdf8'},
+  EN_PROCESO: {label:'En proceso',     color:'#f5a524'},
+  ERROR_ETAPA:{label:'Error de etapa', color:'#f4426c'},
+  CANCELADO:  {label:'Cancelado',      color:'#7c8b99'},
+  SIN_MATRIZ: {label:'Sin matriz',     color:'#a78bfa'}
 };
-
 const ETAPAS = {juridico:'Jurídico', reconocimiento:'Reconocimiento',
                 geografico:'Geográfico'};
 
-/* ==========================================================
-   ESTADO CENTRAL
-   ========================================================== */
-const app = {
-  puntos: null,        // FeatureCollection
-  atributos: null,     // {campos, filas}
-  resumen: null,
-  indice: null,        // RBush
-  porNpn: new Map(),   // npn -> fila
-  apagados: new Set(), // estados ocultos
-  seleccion: null,
-  capasCalidad: {}
+const nf = n => (n||0).toLocaleString('es-CO');
+const pf = n => n.toFixed(1).replace('.',',');
+
+const S = {
+  tabla:null, ficha:null, resumen:null, dominios:{},
+  puntos:[], indice:null,
+  porFila:new Map(), col:{}, val:null,
+  idx:{},
+  filtros:{uit:'', barrio:'', manzana:''},
+  ocultos:new Set(),
+  visibles:null,
+  seleccion:null, hover:null,
+  ambito:'todos',
+  orden:{campo:'npn', asc:true},
+  zonas:{}
 };
 
-/* ==========================================================
-   MAPA
-   ========================================================== */
-const map = L.map('mapa', {
-  center: CFG.centro,
-  zoom: CFG.zoom,
-  minZoom: 12,
-  maxZoom: 22,
-  maxBounds: CFG.limites,
-  maxBoundsViscosity: .9,
-  preferCanvas: true,
-  zoomControl: false,
-  attributionControl: true
+/* ── mapa ── */
+const map = L.map('mapa',{
+  center:CFG.centro, zoom:CFG.zoom, minZoom:12, maxZoom:22,
+  maxBounds:CFG.limites, maxBoundsViscosity:.9,
+  preferCanvas:true, zoomControl:false
 });
-
 L.control.zoom({position:'topright'}).addTo(map);
-L.control.scale({imperial:false, position:'bottomleft'}).addTo(map);
+L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 
-const orto = L.tileLayer(CFG.orto, {
+const orto = L.tileLayer(CFG.orto,{
   attribution:'Ortofoto Falcon Precision',
-  minZoom:0, maxZoom:22, maxNativeZoom:22, tms:false,
-  bounds: CFG.limites
-}).addTo(map);
+  minZoom:0, maxZoom:22, maxNativeZoom:22, bounds:CFG.limites}).addTo(map);
 
 const etiquetas = L.tileLayer(
   'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
   {attribution:'&copy; OpenStreetMap &copy; CARTO', maxZoom:20,
-   maxNativeZoom:20, pane:'shadowPane'}
-).addTo(map);
+   maxNativeZoom:20, pane:'shadowPane'}).addTo(map);
 
-/* paneles de dibujo, para controlar el orden de apilado */
-map.createPane('ctx');      map.getPane('ctx').style.zIndex = 410;
-map.createPane('calidad');  map.getPane('calidad').style.zIndex = 440;
-map.createPane('pts');      map.getPane('pts').style.zIndex = 460;
+map.createPane('zonas');   map.getPane('zonas').style.zIndex = 410;
+map.createPane('calidad'); map.getPane('calidad').style.zIndex = 440;
+map.createPane('pts');     map.getPane('pts').style.zIndex = 460;
+map.createPane('resalte'); map.getPane('resalte').style.zIndex = 480;
 
-const lienzo = L.canvas({pane:'pts', padding:.35});
-const capaPuntos = L.layerGroup([], {pane:'pts'}).addTo(map);
+const lienzo = L.canvas({pane:'pts', padding:.3});
+const capaPts = L.layerGroup([],{pane:'pts'}).addTo(map);
+const capaResalte = L.layerGroup([],{pane:'resalte'}).addTo(map);
 
-/* ==========================================================
-   CARGA
-   ========================================================== */
+/* ── carga ── */
+const detalle = t => {
+  const d = document.getElementById('carga-detalle');
+  if(d) d.textContent = t;
+};
+
 async function traer(archivo, obligatorio=true){
   try{
     const r = await fetch(CFG.datos + archivo);
     if(!r.ok) throw new Error(r.status);
     return await r.json();
   }catch(e){
-    if(obligatorio) throw new Error(`No se pudo leer ${archivo}`);
+    if(obligatorio) throw new Error('No se pudo leer ' + archivo);
     return null;
   }
-}
-
-function detalle(txt){
-  document.getElementById('carga-detalle').textContent = txt;
 }
 
 async function arrancar(){
   try{
     detalle('indicadores');
-    app.resumen = await traer('resumen.json');
-
-    detalle('geometrías');
-    app.puntos = await traer('predios.geojson');
+    S.resumen = await traer('resumen.json');
 
     detalle('atributos');
-    app.atributos = await traer('atributos.json');
+    S.tabla = await traer('tabla.json');
+    S.dominios = await traer('dominios.json', false) || {};
+
+    detalle('geometrías');
+    const geo = await traer('predios.geojson');
 
     detalle('indexando');
-    indexar();
+    construirIndices(geo);
 
     pintarCabecera();
+    pintarFiltros();
     pintarCapas();
-    redibujar();
-
-    await cargarContexto();
+    pintarEncabezadoTabla();
+    aplicarFiltros();
 
     document.getElementById('carga').style.display = 'none';
+    traer('ficha.json', false).then(f => { S.ficha = f; });
+    cargarZonas();
   }catch(e){
     document.getElementById('carga').innerHTML =
-      `<div style="color:#f4426c;max-width:420px;text-align:center;line-height:1.6">
-         ${e.message}<br>
-         <span style="color:var(--texto-2);font-size:12px">
-           Copia la carpeta <code>publico/</code> del corte a <code>data/</code>
-           y sirve la página por HTTP.</span>
-       </div>`;
+      '<div style="color:#f4426c;max-width:430px;text-align:center;line-height:1.65">'
+      + e.message +
+      '<div style="color:#5f7386;font-size:12px;margin-top:9px">'
+      + 'Copia la carpeta <code>publico/</code> del corte a <code>data/</code> '
+      + 'y abre la página por HTTP, no con doble clic.</div></div>';
   }
 }
 
-function indexar(){
-  /* atributos por NPN */
-  const cs = app.atributos.campos.map(c => c.key);
-  const iN = cs.indexOf('npn');
-  for(const fila of app.atributos.filas){
-    app.porNpn.set(fila[iN], fila);
+function construirIndices(geo){
+  S.tabla.campos.forEach((c,i) => S.col[c.key] = i);
+  const cat = S.tabla.catalogo || {};
+
+  S.val = (fila, key) => {
+    const i = S.col[key];
+    if(i === undefined) return null;
+    const v = fila[i];
+    if(v === null || v === undefined) return null;
+    return cat[key] ? cat[key][v] : v;
+  };
+
+  for(const k of ['uit','barrio','estado']){
+    if(S.col[k] === undefined) continue;
+    const m = new Map();
+    S.tabla.filas.forEach((f,i) => {
+      const v = S.val(f,k);
+      if(v == null) return;
+      if(!m.has(v)) m.set(v, new Set());
+      m.get(v).add(i);
+    });
+    S.idx[k] = m;
   }
 
-  /* indice espacial de los puntos */
-  app.indice = new RBush();
-  const items = app.puntos.features.map(f => {
-    const [x,y] = f.geometry.coordinates;
-    return {minX:x, minY:y, maxX:x, maxY:y, f:f};
-  });
-  app.indice.load(items);
+  for(const f of geo.features){
+    const c = f.geometry.coordinates;
+    const p = {i:f.properties.i, x:c[0], y:c[1], e:f.properties.e};
+    S.puntos.push(p);
+    S.porFila.set(p.i, p);
+  }
+  S.indice = new RBush();
+  S.indice.load(S.puntos.map(p => ({minX:p.x,minY:p.y,maxX:p.x,maxY:p.y,p})));
 }
 
-/* ==========================================================
-   DIBUJO DE PUNTOS  (solo lo visible)
-   ========================================================== */
-let pendiente = null;
-
-function redibujar(){
-  clearTimeout(pendiente);
-  pendiente = setTimeout(_redibujar, 90);
+/* ── filtros ── */
+function interseccion(a,b){
+  const ch = a.size < b.size ? a : b;
+  const gr = ch === a ? b : a;
+  const r = new Set();
+  for(const v of ch) if(gr.has(v)) r.add(v);
+  return r;
 }
+
+function aplicarFiltros(){
+  const f = S.filtros;
+  let res = null;
+  const cruzar = c => { res = res === null ? c : interseccion(res,c); };
+
+  if(f.uit && S.idx.uit && S.idx.uit.has(f.uit)) cruzar(S.idx.uit.get(f.uit));
+  if(f.barrio && S.idx.barrio && S.idx.barrio.has(f.barrio))
+    cruzar(S.idx.barrio.get(f.barrio));
+
+  if(f.manzana){
+    const s = new Set(), iN = S.col.npn;
+    S.tabla.filas.forEach((fila,i) => {
+      if(String(fila[iN]).startsWith(f.manzana)) s.add(i);
+    });
+    cruzar(s);
+  }
+
+  S.visibles = res;
+  pintarChips();
+  actualizarResumenFiltrado();
+  redibujar();
+  pintarTabla();
+}
+
+const enFiltro = i => S.visibles === null || S.visibles.has(i);
+
+function pintarFiltros(){
+  const llenar = (id, lista) => {
+    const sel = document.getElementById(id);
+    for(const v of (lista || [])){
+      const o = document.createElement('option');
+      o.value = v; o.textContent = v;
+      sel.appendChild(o);
+    }
+  };
+  llenar('f-uit', S.dominios.uit);
+  llenar('f-barrio', S.dominios.barrio);
+
+  document.getElementById('f-uit').onchange = e => {
+    S.filtros.uit = e.target.value;
+    aplicarFiltros();
+    e.target.value ? volarAZona('uit', e.target.value) : quitarZona();
+  };
+  document.getElementById('f-barrio').onchange = e => {
+    S.filtros.barrio = e.target.value;
+    aplicarFiltros();
+    e.target.value ? volarAZona('barrio', e.target.value) : quitarZona();
+  };
+}
+
+function pintarChips(){
+  const c = document.getElementById('chips');
+  c.innerHTML = '';
+  const activos = [
+    ['uit','Unidad',S.filtros.uit],
+    ['barrio','Barrio',S.filtros.barrio],
+    ['manzana','Manzana',S.filtros.manzana]
+  ].filter(x => x[2]);
+
+  for(const par of activos){
+    const k = par[0], label = par[1], v = par[2];
+    const el = document.createElement('span');
+    el.className = 'chip-f';
+    el.innerHTML = '<span>' + label + ': <b>' + v + '</b></span>'
+                 + '<button aria-label="Quitar filtro">×</button>';
+    el.querySelector('button').onclick = () => {
+      S.filtros[k] = '';
+      const sel = document.getElementById('f-' + k);
+      if(sel) sel.value = '';
+      if(k === 'manzana') document.getElementById('q').value = '';
+      quitarZona();
+      aplicarFiltros();
+    };
+    c.appendChild(el);
+  }
+}
+
+function actualizarResumenFiltrado(){
+  const div = document.getElementById('resultado');
+  if(S.visibles === null){
+    div.innerHTML =
+      '<div><span class="grande mono">' + nf(S.tabla.filas.length)
+      + '</span> predios</div>'
+      + '<div style="font-size:11px;color:var(--texto-3);margin-top:2px">'
+      + 'Todo el municipio</div>';
+    return;
+  }
+  const cuenta = {};
+  for(const i of S.visibles){
+    const e = S.val(S.tabla.filas[i],'estado');
+    cuenta[e] = (cuenta[e]||0) + 1;
+  }
+  const total = S.visibles.size;
+  const ent = cuenta.ENTREGADO || 0;
+  const listo = cuenta.LISTO || 0;
+  div.innerHTML =
+    '<div><span class="grande mono">' + nf(total) + '</span> predios en la selección</div>'
+    + '<div style="margin-top:5px">Entregados <b class="mono">' + nf(ent)
+    + '</b> · <b style="color:var(--entregado)">'
+    + pf(total ? ent/total*100 : 0) + ' %</b></div>'
+    + '<div>Listos <b class="mono">' + nf(listo)
+    + '</b> · <b style="color:var(--listo)">'
+    + pf(total ? listo/total*100 : 0) + ' %</b></div>';
+}
+
+/* ── búsqueda ── */
+const cajaQ = document.getElementById('q');
+const cajaSug = document.getElementById('sugerencias');
+let tSug = null, sugActual = [], sugSel = -1;
+
+cajaQ.addEventListener('input', () => {
+  clearTimeout(tSug);
+  tSug = setTimeout(sugerir, 180);
+});
+
+cajaQ.addEventListener('keydown', e => {
+  if(!cajaSug.classList.contains('abierto')) return;
+  if(e.key === 'ArrowDown'){ e.preventDefault(); moverSug(1); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); moverSug(-1); }
+  else if(e.key === 'Enter'){
+    e.preventDefault();
+    const s = sugSel >= 0 ? sugActual[sugSel] : sugActual[0];
+    if(s) elegirSug(s);
+  }else if(e.key === 'Escape') cerrarSug();
+});
+
+function moverSug(d){
+  const hijos = cajaSug.children;
+  if(sugSel >= 0 && hijos[sugSel]) hijos[sugSel].classList.remove('activo');
+  sugSel = Math.max(0, Math.min(sugActual.length - 1, sugSel + d));
+  if(hijos[sugSel]){
+    hijos[sugSel].classList.add('activo');
+    hijos[sugSel].scrollIntoView({block:'nearest'});
+  }
+}
+
+function sugerir(){
+  const q = cajaQ.value.trim().toUpperCase();
+  sugSel = -1;
+  if(q.length < 2) return cerrarSug();
+
+  const res = [];
+  const tipos = [['barrio','Barrio'],['uit','Unidad']];
+  for(const t of tipos){
+    for(const v of (S.dominios[t[0]] || [])){
+      if(String(v).toUpperCase().indexOf(q) >= 0){
+        const set = S.idx[t[0]] ? S.idx[t[0]].get(v) : null;
+        res.push({t:t[0], v:v, label:t[1], n:set ? set.size : 0});
+        if(res.length > 6) break;
+      }
+    }
+  }
+
+  if(/^\d+$/.test(q)){
+    const iN = S.col.npn;
+    let n = 0;
+    for(let i = 0; i < S.tabla.filas.length && n < 6; i++){
+      const npn = String(S.tabla.filas[i][iN]);
+      if(npn.indexOf(q) >= 0){
+        res.push({t:'predio', v:npn, i:i,
+                  label:S.val(S.tabla.filas[i],'barrio') || 'Predio'});
+        n++;
+      }
+    }
+  }
+
+  sugActual = res.slice(0,10);
+  if(!sugActual.length) return cerrarSug();
+
+  cajaSug.innerHTML = '';
+  for(const s of sugActual){
+    const d = document.createElement('div');
+    d.className = 'sug';
+    d.innerHTML = s.t === 'predio'
+      ? '<div class="mono">' + s.v + '</div><div class="meta">' + s.label + '</div>'
+      : '<div>' + s.v + '</div><div class="meta">' + s.label + ' · '
+        + nf(s.n) + ' predios</div>';
+    d.onclick = () => elegirSug(s);
+    cajaSug.appendChild(d);
+  }
+  cajaSug.classList.add('abierto');
+}
+
+function elegirSug(s){
+  cerrarSug();
+  if(s.t === 'predio'){
+    cajaQ.value = s.v;
+    abrirFicha(s.i);
+    const p = S.porFila.get(s.i);
+    if(p) map.flyTo([p.y,p.x], 19, {duration:.7});
+  }else{
+    cajaQ.value = '';
+    S.filtros[s.t] = s.v;
+    const sel = document.getElementById('f-' + s.t);
+    if(sel) sel.value = s.v;
+    aplicarFiltros();
+    volarAZona(s.t, s.v);
+  }
+}
+
+function cerrarSug(){
+  cajaSug.classList.remove('abierto');
+  cajaSug.innerHTML = '';
+  sugActual = []; sugSel = -1;
+}
+document.addEventListener('click', e => {
+  if(!e.target.closest('#buscar-wrap')) cerrarSug();
+});
+
+/* ── dibujo ── */
+let pend = null;
+const redibujar = () => { clearTimeout(pend); pend = setTimeout(_redibujar, 80); };
 
 function _redibujar(){
-  capaPuntos.clearLayers();
+  capaPts.clearLayers();
   const z = map.getZoom();
   document.getElementById('e-zoom').textContent = z;
 
@@ -409,92 +696,146 @@ function _redibujar(){
     return;
   }
 
-  const b = map.getBounds().pad(.25);
-  const enVista = app.indice.search({
+  const b = map.getBounds().pad(.22);
+  const enVista = S.indice.search({
     minX:b.getWest(), minY:b.getSouth(),
-    maxX:b.getEast(), maxY:b.getNorth()
-  });
+    maxX:b.getEast(), maxY:b.getNorth()});
 
-  const r = z >= 19 ? 6 : z >= 17 ? 4 : 2.6;
+  const r = z >= 19 ? 6 : z >= 17 ? 4.2 : 2.7;
+  const hayFiltro = S.visibles !== null;
   let n = 0;
 
   for(const it of enVista){
-    const p = it.f.properties;
-    if(app.apagados.has(p.e)) continue;
+    const p = it.p;
+    if(S.ocultos.has(p.e)) continue;
+    const dentro = !hayFiltro || S.visibles.has(p.i);
     const col = (ESTADOS[p.e] || {}).color || '#888';
-    const [x,y] = it.f.geometry.coordinates;
 
-    L.circleMarker([y,x], {
-      renderer: lienzo,
-      radius: r,
-      color: '#08111a',
-      weight: z >= 17 ? 1 : 0,
+    L.circleMarker([p.y,p.x],{
+      renderer:lienzo, pane:'pts',
+      radius: dentro ? r : r*.5,
+      color: dentro ? '#07101a' : 'transparent',
+      weight: (dentro && z >= 17) ? 1 : 0,
       fillColor: col,
-      fillOpacity: .92,
-      pane: 'pts'
-    }).on('click', () => abrirFicha(p.n)).addTo(capaPuntos);
-    n++;
+      fillOpacity: dentro ? .93 : .16,
+      interactive:false
+    }).addTo(capaPts);
+    if(dentro) n++;
   }
-  document.getElementById('e-vis').textContent = n.toLocaleString('es-CO');
+
+  document.getElementById('e-vis').textContent = nf(n);
+  if(S.ambito === 'vis') pintarTabla();
 }
 
 map.on('moveend zoomend', redibujar);
 
-/* ==========================================================
-   CABECERA
-   ========================================================== */
-function pintarCabecera(){
-  const r = app.resumen;
-  const est = r.estados || {};
-  const total = r.total || 1;
+/* hover y clic: un solo listener + búsqueda en el índice espacial */
+const tt = document.getElementById('tt');
+let rafHover = null;
 
+map.on('mousemove', e => {
+  if(rafHover) return;
+  rafHover = requestAnimationFrame(() => {
+    rafHover = null;
+    const p = puntoEn(e.latlng, e.containerPoint);
+    if(p === S.hover) return;
+    S.hover = p;
+    if(!p){
+      tt.style.display = 'none';
+      map.getContainer().style.cursor = '';
+      return;
+    }
+    const fila = S.tabla.filas[p.i];
+    const est = S.val(fila,'estado');
+    tt.innerHTML = '<div class="mono">' + fila[S.col.npn] + '</div>'
+      + '<div class="e">' + ((ESTADOS[est]||{}).label || est) + '</div>';
+    tt.style.display = 'block';
+    tt.style.left = (e.containerPoint.x + 14) + 'px';
+    tt.style.top  = (e.containerPoint.y + 14) + 'px';
+    map.getContainer().style.cursor = 'pointer';
+  });
+});
+
+map.on('mouseout', () => { tt.style.display='none'; S.hover = null; });
+
+map.on('click', e => {
+  const p = puntoEn(e.latlng, e.containerPoint);
+  if(p) abrirFicha(p.i);
+});
+
+function puntoEn(latlng, cp){
+  if(map.getZoom() < CFG.zoomPuntos) return null;
+  const tol = map.getZoom() >= 19 ? 10 : 8;
+  const nw = map.containerPointToLatLng([cp.x - tol, cp.y - tol]);
+  const se = map.containerPointToLatLng([cp.x + tol, cp.y + tol]);
+  const cand = S.indice.search({
+    minX:nw.lng, minY:se.lat, maxX:se.lng, maxY:nw.lat});
+  let mejor = null, dm = Infinity;
+  for(const it of cand){
+    if(S.ocultos.has(it.p.e)) continue;
+    if(S.visibles !== null && !S.visibles.has(it.p.i)) continue;
+    const dx = it.p.x - latlng.lng, dy = it.p.y - latlng.lat;
+    const d = dx*dx + dy*dy;
+    if(d < dm){ dm = d; mejor = it.p; }
+  }
+  return mejor;
+}
+
+function resaltar(i){
+  capaResalte.clearLayers();
+  const p = S.porFila.get(i);
+  if(!p) return;
+  L.circleMarker([p.y,p.x],{
+    pane:'resalte', radius:11, color:'#4cc2ff', weight:2.5,
+    fillColor:'#4cc2ff', fillOpacity:.2, interactive:false
+  }).addTo(capaResalte);
+}
+
+/* ── cabecera ── */
+function pintarCabecera(){
+  const r = S.resumen, est = r.estados || {}, total = r.total || 1;
   document.getElementById('sub').textContent =
-    `Valledupar · corte ${fechaCorte(r.corte)}`;
+    'Valledupar · corte ' + fechaCorte(r.corte);
 
   const ent = est.ENTREGADO || 0;
-  document.getElementById('c-entregado').textContent = ent.toLocaleString('es-CO');
-  document.getElementById('c-pct').textContent =
-    (ent/total*100).toFixed(1).replace('.',',') + ' %';
+  document.getElementById('c-entregado').textContent = nf(ent);
+  document.getElementById('c-pct').textContent = pf(ent/total*100) + ' %';
 
-  /* medidor apilado */
-  const med = document.getElementById('medidor');
-  med.innerHTML = '';
-  for(const k of Object.keys(ESTADOS)){
-    const n = est[k]; if(!n) continue;
+  const med = document.getElementById('medidor'); med.innerHTML = '';
+  const tb = document.getElementById('totales'); tb.innerHTML = '';
+
+  for(const k in ESTADOS){
+    const n = est[k];
+    if(!n) continue;
+
     const i = document.createElement('i');
     i.style.width = (n/total*100) + '%';
     i.style.background = ESTADOS[k].color;
-    i.title = `${ESTADOS[k].label}: ${n.toLocaleString('es-CO')}`;
+    i.title = ESTADOS[k].label + ': ' + nf(n);
     med.appendChild(i);
-  }
 
-  /* tabla de totales, clicable para filtrar */
-  const tb = document.getElementById('totales');
-  tb.innerHTML = '';
-  for(const k of Object.keys(ESTADOS)){
-    const n = est[k]; if(!n) continue;
     const tr = document.createElement('tr');
-    tr.innerHTML =
-      `<td><span class="marca" style="background:${ESTADOS[k].color}"></span>${ESTADOS[k].label}</td>
-       <td class="mono">${n.toLocaleString('es-CO')}</td>`;
+    tr.innerHTML = '<td><span class="marca" style="background:'
+      + ESTADOS[k].color + '"></span>' + ESTADOS[k].label + '</td>'
+      + '<td class="mono">' + nf(n) + '</td>';
+    tr.title = 'Mostrar u ocultar en el mapa';
     tr.onclick = () => {
-      app.apagados.has(k) ? app.apagados.delete(k) : app.apagados.add(k);
-      tr.classList.toggle('off', app.apagados.has(k));
+      if(S.ocultos.has(k)) S.ocultos.delete(k); else S.ocultos.add(k);
+      tr.classList.toggle('off', S.ocultos.has(k));
       redibujar();
     };
     tb.appendChild(tr);
   }
 
-  /* avance sobre los dos universos */
   const a = r.avance;
   if(a){
-    let h = `<div>Universo actual · <b>${a.universo_actual.pct.toFixed(1).replace('.',',')} %</b>
-             de ${a.universo_actual.total.toLocaleString('es-CO')}</div>`;
+    let h = '<div>Universo actual · <b>' + pf(a.universo_actual.pct)
+          + ' %</b> de ' + nf(a.universo_actual.total) + '</div>';
     if(a.universo_inicial){
-      h += `<div>Listado inicial · <b>${a.universo_inicial.pct.toFixed(1).replace('.',',')} %</b>
-            de ${a.universo_inicial.total.toLocaleString('es-CO')}</div>`;
-      h += `<div><b>${a.nuevos_entregados.toLocaleString('es-CO')}</b> entregados
-            hallados en campo</div>`;
+      h += '<div>Listado inicial · <b>' + pf(a.universo_inicial.pct)
+         + ' %</b> de ' + nf(a.universo_inicial.total) + '</div>'
+         + '<div><b>' + nf(a.nuevos_entregados)
+         + '</b> entregados hallados en campo</div>';
     }
     document.getElementById('dual').innerHTML = h;
   }
@@ -502,24 +843,19 @@ function pintarCabecera(){
 
 function fechaCorte(c){
   if(!c || c.length !== 8) return c || '—';
-  const m = ['ene','feb','mar','abr','may','jun',
-             'jul','ago','sep','oct','nov','dic'];
-  return `${c.slice(6,8)} ${m[+c.slice(4,6)-1]} ${c.slice(0,4)}`;
+  const m = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return c.slice(6,8) + ' ' + m[+c.slice(4,6)-1] + ' ' + c.slice(0,4);
 }
 
-/* ==========================================================
-   FICHA
-   ========================================================== */
-function abrirFicha(npn){
-  const fila = app.porNpn.get(npn);
+/* ── ficha ── */
+function abrirFicha(i){
+  const fila = S.tabla.filas[i];
   if(!fila) return;
-  app.seleccion = npn;
+  S.seleccion = i;
+  resaltar(i);
 
-  const campos = app.atributos.campos;
-  document.getElementById('f-npn').textContent = npn;
-
-  const iEst = campos.findIndex(c => c.key === 'estado');
-  const est  = fila[iEst];
+  document.getElementById('f-npn').textContent = fila[S.col.npn];
+  const est = S.val(fila,'estado');
   const info = ESTADOS[est] || {label:est, color:'#888'};
   const chip = document.getElementById('f-chip');
   chip.textContent = info.label;
@@ -528,124 +864,382 @@ function abrirFicha(npn){
 
   const dl = document.getElementById('f-attr');
   dl.innerHTML = '';
-  campos.forEach((c, i) => {
-    if(c.key === 'npn' || c.key === 'estado') return;
-    let v = fila[i];
+  agregarAttr(dl, S.tabla, i, ['npn','estado']);
+
+  if(S.ficha){
+    agregarAttr(dl, S.ficha, i, ['estado']);
+  }else{
+    const d = document.createElement('div');
+    d.innerHTML = '<dt>Cargando detalle…</dt><dd></dd>';
+    dl.appendChild(d);
+    traer('ficha.json', false).then(f => {
+      S.ficha = f;
+      if(S.seleccion === i) abrirFicha(i);
+    });
+  }
+
+  document.getElementById('ficha').classList.add('abierta');
+  marcarFilaTabla(i);
+}
+
+function agregarAttr(dl, fuente, i, omitir){
+  if(!fuente || !fuente.filas) return;
+  const fila = fuente.filas[i];
+  if(!fila) return;
+  const cat = fuente.catalogo || {};
+
+  fuente.campos.forEach((c,j) => {
+    if(omitir.indexOf(c.key) >= 0) return;
+    let v = fila[j];
+    if(v === null || v === undefined || v === '') return;
+    if(cat[c.key]) v = cat[c.key][v];
     if(v === null || v === undefined || v === '') return;
 
     if(c.key === 'etapa')   v = ETAPAS[v] || v;
     if(c.key === 'ini')     v = v ? 'Sí' : 'No';
-    if(c.key === 'entrega') v = v === 1 ? 'Primera' : v === 2 ? 'Segunda' : v;
+    if(c.key === 'entrega') v = v === 1 ? 'Primera' : (v === 2 ? 'Segunda' : v);
     if(c.tipo === 'num' && typeof v === 'number')
-      v = v.toLocaleString('es-CO', {minimumFractionDigits:c.dec||0,
-                                     maximumFractionDigits:c.dec||0});
+      v = v.toLocaleString('es-CO',{minimumFractionDigits:c.dec||0,
+                                    maximumFractionDigits:c.dec||0});
 
     const d = document.createElement('div');
-    d.innerHTML = `<dt>${c.label}</dt><dd>${v}</dd>`;
+    d.innerHTML = '<dt>' + c.label + '</dt><dd>' + v + '</dd>';
     dl.appendChild(d);
   });
-
-  document.getElementById('ficha').classList.add('abierta');
 }
 
-document.getElementById('f-cerrar').onclick = () => {
+function cerrarFicha(){
   document.getElementById('ficha').classList.remove('abierta');
-  app.seleccion = null;
-};
+  capaResalte.clearLayers();
+  S.seleccion = null;
+  marcarFilaTabla(null);
+}
+document.getElementById('f-cerrar').onclick = cerrarFicha;
+
 document.addEventListener('keydown', e => {
-  if(e.key === 'Escape') document.getElementById('f-cerrar').click();
+  if(e.key !== 'Escape') return;
+  if(cajaSug.classList.contains('abierto')) cerrarSug();
+  else if(S.seleccion !== null) cerrarFicha();
+  else if(document.getElementById('gaveta').classList.contains('abierta'))
+    cerrarGaveta();
 });
 
-/* ==========================================================
-   CAPAS
-   ========================================================== */
-function filaCapa(id, label, color, capa, activa, n){
+/* ── tabla con scroll virtual ── */
+const COLS = ['npn','barrio','uit','estado','etapa'];
+const ANCHOS = {npn:'34%', barrio:'26%', uit:'12%', estado:'16%', etapa:'12%'};
+const scroll = document.getElementById('scroll');
+const tbody = document.getElementById('tbody');
+let listaTabla = [];
+
+function pintarEncabezadoTabla(){
+  const th = document.getElementById('thead');
+  th.innerHTML = '';
+  for(const k of COLS){
+    const c = S.tabla.campos.find(x => x.key === k) || {label:k};
+    const t = document.createElement('th');
+    t.style.width = ANCHOS[k] || 'auto';
+    t.dataset.k = k;
+    t.innerHTML = c.label + '<span class="flecha"></span>';
+    t.onclick = () => {
+      S.orden = {campo:k, asc: S.orden.campo === k ? !S.orden.asc : true};
+      pintarTabla();
+    };
+    th.appendChild(t);
+  }
+}
+
+function pintarTabla(){
+  if(!document.getElementById('gaveta').classList.contains('abierta')) return;
+
+  let base;
+  if(S.ambito === 'vis' && map.getZoom() >= CFG.zoomPuntos){
+    const b = map.getBounds();
+    base = S.indice.search({minX:b.getWest(), minY:b.getSouth(),
+                            maxX:b.getEast(), maxY:b.getNorth()})
+             .map(it => it.p.i).filter(enFiltro);
+  }else{
+    base = S.visibles === null
+      ? S.tabla.filas.map((_,i) => i)
+      : Array.from(S.visibles);
+  }
+  if(S.ocultos.size){
+    base = base.filter(i => !S.ocultos.has(S.val(S.tabla.filas[i],'estado')));
+  }
+
+  const k = S.orden.campo, dir = S.orden.asc ? 1 : -1;
+  base.sort((a,b) => {
+    const va = S.val(S.tabla.filas[a], k), vb = S.val(S.tabla.filas[b], k);
+    const xa = va === null || va === undefined ? '' : va;
+    const xb = vb === null || vb === undefined ? '' : vb;
+    return xa < xb ? -dir : (xa > xb ? dir : 0);
+  });
+
+  listaTabla = base;
+  document.getElementById('g-cuenta').textContent = nf(base.length) + ' predios';
+
+  const ths = document.querySelectorAll('#thead th');
+  for(const t of ths){
+    t.querySelector('.flecha').textContent =
+      t.dataset.k === k ? (S.orden.asc ? '▲' : '▼') : '';
+  }
+
+  scroll.scrollTop = 0;
+  render();
+}
+
+scroll.addEventListener('scroll', () => requestAnimationFrame(render));
+
+function render(){
+  const alto = CFG.filaAlto;
+  const total = listaTabla.length;
+  const desde = Math.max(0, Math.floor(scroll.scrollTop / alto) - 6);
+  const hasta = Math.min(total, desde + Math.ceil(scroll.clientHeight / alto) + 12);
+  const arriba = desde * alto;
+  const abajo = Math.max(0, (total - hasta) * alto);
+
+  let html = arriba ? '<tr style="height:' + arriba + 'px"><td colspan="5"></td></tr>' : '';
+  for(let n = desde; n < hasta; n++){
+    const i = listaTabla[n];
+    const f = S.tabla.filas[i];
+    const est = S.val(f,'estado');
+    const col = (ESTADOS[est] || {}).color || '#888';
+    const etapa = S.val(f,'etapa');
+    html += '<tr data-i="' + i + '"' + (i === S.seleccion ? ' class="sel"' : '') + '>'
+      + '<td class="mono">' + f[S.col.npn] + '</td>'
+      + '<td>' + (S.val(f,'barrio') || '') + '</td>'
+      + '<td>' + (S.val(f,'uit') || '') + '</td>'
+      + '<td><span class="punto-est" style="background:' + col + '"></span>'
+      + ((ESTADOS[est] || {}).label || est || '') + '</td>'
+      + '<td>' + (ETAPAS[etapa] || '') + '</td></tr>';
+  }
+  if(abajo) html += '<tr style="height:' + abajo + 'px"><td colspan="5"></td></tr>';
+  tbody.innerHTML = html;
+}
+
+tbody.addEventListener('click', e => {
+  const tr = e.target.closest('tr[data-i]');
+  if(!tr) return;
+  const i = +tr.dataset.i;
+  abrirFicha(i);
+  const p = S.porFila.get(i);
+  if(p) map.flyTo([p.y,p.x], Math.max(map.getZoom(), 18), {duration:.6});
+});
+
+tbody.addEventListener('mouseover', e => {
+  const tr = e.target.closest('tr[data-i]');
+  if(tr) resaltar(+tr.dataset.i);
+});
+tbody.addEventListener('mouseleave', () => {
+  if(S.seleccion !== null) resaltar(S.seleccion);
+  else capaResalte.clearLayers();
+});
+
+function marcarFilaTabla(i){
+  const previas = tbody.querySelectorAll('tr.sel');
+  for(const t of previas) t.classList.remove('sel');
+  if(i === null) return;
+  const tr = tbody.querySelector('tr[data-i="' + i + '"]');
+  if(tr){ tr.classList.add('sel'); return; }
+  const n = listaTabla.indexOf(i);
+  if(n >= 0){
+    scroll.scrollTop = Math.max(0, n*CFG.filaAlto - scroll.clientHeight/2);
+    render();
+  }
+}
+
+const gaveta = document.getElementById('gaveta');
+function abrirGaveta(){
+  gaveta.classList.add('abierta');
+  document.documentElement.style.setProperty('--gaveta','290px');
+  setTimeout(() => map.invalidateSize(), 240);
+  pintarTabla();
+}
+function cerrarGaveta(){
+  gaveta.classList.remove('abierta');
+  document.documentElement.style.setProperty('--gaveta','0px');
+  setTimeout(() => map.invalidateSize(), 240);
+}
+document.getElementById('abrir-tabla').onclick = abrirGaveta;
+document.getElementById('g-cerrar').onclick = cerrarGaveta;
+
+document.getElementById('g-todos').onclick = function(){
+  S.ambito = 'todos';
+  this.classList.add('on');
+  document.getElementById('g-vis').classList.remove('on');
+  pintarTabla();
+};
+document.getElementById('g-vis').onclick = function(){
+  S.ambito = 'vis';
+  this.classList.add('on');
+  document.getElementById('g-todos').classList.remove('on');
+  pintarTabla();
+};
+
+document.getElementById('g-csv').onclick = () => {
+  const cab = COLS.map(k => (S.tabla.campos.find(c => c.key === k) || {label:k}).label);
+  const lin = [cab.join(';')];
+  for(const i of listaTabla){
+    const f = S.tabla.filas[i];
+    lin.push(COLS.map(k => {
+      let v = k === 'npn' ? f[S.col.npn] : S.val(f,k);
+      if(k === 'estado') v = (ESTADOS[v] || {}).label || v;
+      if(k === 'etapa')  v = ETAPAS[v] || v;
+      return v == null ? '' : String(v).replace(/;/g, ',');
+    }).join(';'));
+  }
+  const blob = new Blob(['\uFEFF' + lin.join('\r\n')],
+                        {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'predios_' + S.resumen.corte + '.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+/* ── capas ── */
+function filaCapa(label, color, capa, activa, n){
   const div = document.createElement('label');
   div.className = 'fila-capa';
-  div.innerHTML =
-    `<input type="checkbox" ${activa?'checked':''}>
-     ${color ? `<span class="pin" style="background:${color}"></span>` : ''}
-     <span>${label}</span>
-     ${n != null ? `<span class="n mono">${n.toLocaleString('es-CO')}</span>` : ''}`;
+  div.innerHTML = '<input type="checkbox"' + (activa ? ' checked' : '') + '>'
+    + (color ? '<span class="pin" style="background:' + color + '"></span>' : '')
+    + '<span>' + label + '</span>'
+    + (n != null ? '<span class="n mono">' + nf(n) + '</span>' : '');
   div.querySelector('input').onchange = e => {
     if(!capa) return;
-    e.target.checked ? capa.addTo(map) : map.removeLayer(capa);
+    if(e.target.checked) capa.addTo(map); else map.removeLayer(capa);
   };
   return div;
 }
 
 function pintarCapas(){
-  const cont = document.getElementById('lista-capas');
-  cont.appendChild(filaCapa('orto','Ortofoto',null,orto,true));
-  cont.appendChild(filaCapa('lbl','Calles y nombres',null,etiquetas,true));
+  const c = document.getElementById('lista-capas');
+  c.appendChild(filaCapa('Ortofoto', null, orto, true));
+  c.appendChild(filaCapa('Calles y nombres', null, etiquetas, true));
 }
 
-async function cargarContexto(){
-  const ctx = [
-    {a:'contexto/perimetro.geojson', l:'Perímetro urbano', c:'#ffffff',
-     s:{color:'#ffffff',weight:2,fillOpacity:0,dashArray:'5,4'}, on:true},
-    {a:'contexto/uit.geojson', l:'Unidades de intervención', c:'#4fc3f7',
-     s:{color:'#4fc3f7',weight:2,fillOpacity:0}, on:true, etq:'Nombre'},
-    {a:'contexto/barrios.geojson', l:'Barrios', c:'#b0bec5',
-     s:{color:'#b0bec5',weight:.8,fillOpacity:0,opacity:.55}, on:false, etq:'NOMBRE'}
+const EST_ZONA = {
+  perimetro:{color:'#ffffff', weight:3,   opacity:.95, fillOpacity:0,
+             dashArray:'9,6', halo:'#080d12'},
+  uit:      {color:'#4cc2ff', weight:2.4, opacity:.9,  fillOpacity:.05},
+  barrios:  {color:'#ffd166', weight:1.7, opacity:.8,  fillOpacity:.06}
+};
+
+async function cargarZonas(){
+  const cont = document.getElementById('lista-capas');
+  const defs = [
+    {a:'contexto/perimetro.geojson', l:'Perímetro urbano', k:'perimetro',
+     campo:'Nombre', on:true, halo:true},
+    {a:'contexto/uit.geojson', l:'Unidades de intervención', k:'uit',
+     campo:'Nombre', on:true, filtro:'uit'},
+    {a:'contexto/barrios.geojson', l:'Barrios', k:'barrios',
+     campo:'NOMBRE', on:true, filtro:'barrio'}
   ];
 
-  const cont = document.getElementById('lista-capas');
-  for(const c of ctx){
-    const d = await traer(c.a, false);
-    if(!d) continue;
-    const capa = L.geoJSON(d, {
-      pane:'ctx', style:c.s, interactive:!!c.etq,
-      onEachFeature:(f,l)=>{
-        const t = c.etq && f.properties[c.etq];
-        if(t) l.bindTooltip(String(t), {sticky:true});
+  for(const d of defs){
+    const geo = await traer(d.a, false);
+    if(!geo) continue;
+    const est = EST_ZONA[d.k];
+
+    // halo oscuro debajo: hace legible la línea sobre la ortofoto
+    if(d.halo){
+      const h = L.geoJSON(geo,{pane:'zonas', interactive:false,
+        style:{color:est.halo, weight:est.weight + 3, opacity:.45, fillOpacity:0}});
+      if(d.on) h.addTo(map);
+    }
+
+    const capa = L.geoJSON(geo,{
+      pane:'zonas',
+      style:{color:est.color, weight:est.weight, opacity:est.opacity,
+             fillColor:est.color, fillOpacity:est.fillOpacity,
+             dashArray:est.dashArray},
+      onEachFeature:(f,l) => {
+        const nombre = f.properties ? f.properties[d.campo] : null;
+        if(nombre) l.bindTooltip(String(nombre), {sticky:true, className:'zona'});
+        if(!d.filtro) return;
+
+        l.on('mouseover', () => l.setStyle({weight:est.weight + 1.4,
+                                            fillOpacity:.16, opacity:1}));
+        l.on('mouseout', () => {
+          if(S.filtros[d.filtro] === String(nombre)) return;
+          l.setStyle({weight:est.weight, fillOpacity:est.fillOpacity,
+                      opacity:est.opacity, color:est.color});
+        });
+        l.on('contextmenu', ev => {
+          L.DomEvent.stop(ev);
+          const val = String(nombre);
+          const nuevo = S.filtros[d.filtro] === val ? '' : val;
+          S.filtros[d.filtro] = nuevo;
+          const sel = document.getElementById('f-' + d.filtro);
+          if(sel) sel.value = nuevo;
+          aplicarFiltros();
+          if(nuevo) volarAZona(d.filtro, nuevo); else quitarZona();
+        });
       }
     });
-    if(c.on) capa.addTo(map);
-    cont.appendChild(filaCapa(c.a, c.l, c.c, capa, c.on,
-                              d.features ? d.features.length : null));
-  }
+    if(d.on) capa.addTo(map);
+    if(d.filtro) S.zonas[d.filtro] = {capa:capa, campo:d.campo, est:est};
 
+    cont.appendChild(filaCapa(d.l, est.color, capa, d.on,
+                              geo.features ? geo.features.length : null));
+  }
   await cargarCalidad();
 }
 
-/* capas de revisión: comisión, omisión, pendientes */
+function volarAZona(tipo, valor){
+  quitarZona();
+  const ref = S.zonas[tipo];
+  if(!ref || !valor) return;
+  ref.capa.eachLayer(l => {
+    if(String(l.feature.properties[ref.campo]) !== valor) return;
+    l.setStyle({weight:ref.est.weight + 2, opacity:1, fillOpacity:.14,
+                color:'#4cc2ff'});
+    l.bringToFront();
+    map.flyToBounds(l.getBounds(), {padding:[70,70], duration:.75, maxZoom:18});
+  });
+}
+
+function quitarZona(){
+  for(const t in S.zonas){
+    const ref = S.zonas[t];
+    ref.capa.eachLayer(l => l.setStyle({
+      color:ref.est.color, weight:ref.est.weight,
+      opacity:ref.est.opacity, fillOpacity:ref.est.fillOpacity}));
+  }
+}
+
 async function cargarCalidad(){
   const man = await traer('../opcionales/manifiesto.json', false)
            || await traer('manifiesto.json', false);
   const cont = document.getElementById('lista-calidad');
-
   if(!man || !man.opcionales){
-    cont.innerHTML =
-      `<div style="font-size:11.5px;color:var(--texto-2)">
-         Sin capas de revisión en este corte.</div>`;
+    cont.innerHTML = '<div style="font-size:11.5px;color:var(--texto-3)">'
+      + 'Sin capas de revisión en este corte.</div>';
     return;
   }
-
   for(const o of man.opcionales){
     if(o.tipo !== 'geojson'){
-      const div = document.createElement('div');
-      div.className = 'fila-capa';
-      div.style.cursor = 'default';
-      div.innerHTML =
-        `<span class="pin" style="background:${o.color};opacity:.5"></span>
-         <span title="${o.desc}">${o.label}</span>
-         <span class="n mono">${(o.n||0).toLocaleString('es-CO')}</span>`;
-      cont.appendChild(div);
+      const d = document.createElement('div');
+      d.className = 'fila-capa';
+      d.style.cursor = 'default';
+      d.innerHTML = '<span class="pin" style="background:' + o.color
+        + ';opacity:.5"></span><span title="' + o.desc + '">' + o.label
+        + '</span><span class="n mono">' + nf(o.n) + '</span>';
+      cont.appendChild(d);
       continue;
     }
-    const d = await traer('../opcionales/' + o.archivo, false)
-           || await traer(o.archivo, false);
-    if(!d) continue;
-    const capa = L.geoJSON(d, {
+    const geo = await traer('../opcionales/' + o.archivo, false)
+             || await traer(o.archivo, false);
+    if(!geo) continue;
+    const capa = L.geoJSON(geo,{
       pane:'calidad',
-      style:{color:o.color, weight:1.4, fillColor:o.color, fillOpacity:.22},
-      onEachFeature:(f,l)=>l.bindTooltip(
-        `${o.label}<br><span class="mono">${f.properties.npn||f.properties.cons||''}</span>`)
+      style:{color:o.color, weight:1.5, fillColor:o.color, fillOpacity:.22},
+      onEachFeature:(f,l) => l.bindTooltip(
+        o.label + '<br><span class="mono">'
+        + (f.properties.npn || f.properties.cons || '') + '</span>',
+        {className:'zona'})
     });
-    app.capasCalidad[o.id] = capa;
-    cont.appendChild(filaCapa(o.id, o.label, o.color, capa, false,
-                              d.features ? d.features.length : o.n));
+    cont.appendChild(filaCapa(o.label, o.color, capa, false,
+                              geo.features ? geo.features.length : o.n));
   }
 }
 
