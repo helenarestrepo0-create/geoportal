@@ -1,6 +1,6 @@
 {
  "corte": "20260901",
- "generado": "2026-09-01T14:39:09",
+ "generado": "2026-09-01T14:53:21",
  "total": 129828,
  "estados": {
   "EN_PROCESO": 81374,
@@ -104,6 +104,24 @@
   "errores_etapa": 627
  },
  "puntos_en_mapa": 125041,
+ "poligonos": {
+  "terrenos": {
+   "archivo": "terrenos.fgb",
+   "n": 95810,
+   "zoom_min": 17,
+   "color": "#ffd54f",
+   "label": "Terrenos",
+   "relleno": 0
+  },
+  "construcciones": {
+   "archivo": "construcciones.fgb",
+   "n": 191684,
+   "zoom_min": 18,
+   "color": "#ef5350",
+   "label": "Construcciones",
+   "relleno": 0.28
+  }
+ },
  "opcionales": [
   "comision_terreno",
   "comision_construccion",
