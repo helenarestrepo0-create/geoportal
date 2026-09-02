@@ -1,6 +1,6 @@
 {
  "corte": "20260901",
- "generado": "2026-09-01T18:51:30",
+ "generado": "2026-09-01T19:46:42",
  "total": 129828,
  "estados": {
   "EN_PROCESO": 81374,
@@ -204,7 +204,7 @@
     "UIT_01": {
      "archivo": "construcciones_UIT_01.fgb",
      "n": 29193,
-     "mb": 8.2,
+     "mb": 10.8,
      "caja": [
       -73.295066,
       10.475384,
@@ -215,7 +215,7 @@
     "UIT_04": {
      "archivo": "construcciones_UIT_04.fgb",
      "n": 15479,
-     "mb": 4.7,
+     "mb": 6.0,
      "caja": [
       -73.270992,
       10.463876,
@@ -226,7 +226,7 @@
     "UIT_03": {
      "archivo": "construcciones_UIT_03.fgb",
      "n": 30941,
-     "mb": 8.8,
+     "mb": 11.5,
      "caja": [
       -73.252549,
       10.428161,
@@ -237,7 +237,7 @@
     "UIT_02": {
      "archivo": "construcciones_UIT_02.fgb",
      "n": 5814,
-     "mb": 1.7,
+     "mb": 2.2,
      "caja": [
       -73.23613,
       10.443048,
@@ -259,7 +259,7 @@
     "UIT_06": {
      "archivo": "construcciones_UIT_06.fgb",
      "n": 39663,
-     "mb": 10.8,
+     "mb": 13.7,
      "caja": [
       -73.28941,
       10.43838,
@@ -270,7 +270,7 @@
     "UIT_07": {
      "archivo": "construcciones_UIT_07.fgb",
      "n": 39926,
-     "mb": 11.0,
+     "mb": 14.0,
      "caja": [
       -73.296311,
       10.456525,

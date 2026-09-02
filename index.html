@@ -44,7 +44,43 @@ button{font:inherit}
   backdrop-filter:blur(8px);box-shadow:0 10px 32px rgba(0,0,0,.6);
 }
 
-#cabecera{top:12px;left:12px;width:296px;padding:14px 17px 13px}
+/* ══ barra de herramientas ══ */
+#barra{
+  position:absolute;top:12px;left:12px;z-index:820;
+  display:flex;flex-direction:column;gap:2px;padding:5px;
+  background:rgba(14,20,26,.95);border:1px solid var(--linea);
+  border-radius:6px;backdrop-filter:blur(8px);
+  box-shadow:0 8px 26px rgba(0,0,0,.6);
+}
+#barra button{
+  width:34px;height:34px;border:0;border-radius:4px;cursor:pointer;
+  background:none;color:var(--texto-2);display:grid;place-items:center;
+  transition:.13s;position:relative;
+}
+#barra button:hover{background:var(--tinta-2);color:var(--texto)}
+#barra button.on{background:var(--foco);color:#06121c}
+#barra button svg{width:18px;height:18px;stroke-width:1.7;
+  stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round}
+#barra .sep{height:1px;background:var(--linea);margin:3px 4px}
+#barra button::after{
+  content:attr(data-tip);position:absolute;left:calc(100% + 9px);
+  white-space:nowrap;background:rgba(14,20,26,.97);color:var(--texto);
+  border:1px solid var(--linea-2);border-radius:4px;padding:4px 9px;
+  font-size:11.5px;opacity:0;pointer-events:none;transition:opacity .12s;
+}
+#barra button:hover::after{opacity:1}
+
+/* los paneles se abren al lado de la barra */
+.cajon{
+  position:absolute;top:12px;left:60px;z-index:610;width:290px;
+  max-height:calc(100vh - var(--gaveta) - 24px);overflow-y:auto;
+  display:none;
+}
+.cajon.abierto{display:block;animation:entra .16s ease-out}
+@keyframes entra{from{opacity:0;transform:translateX(-6px)}
+                 to{opacity:1;transform:none}}
+
+#cabecera{padding:14px 17px 13px}
 #cabecera h1{margin:0 0 2px;font-size:15px;font-weight:600;letter-spacing:-.01em}
 #cabecera .sub{color:var(--texto-2);font-size:11.5px;margin-bottom:13px}
 .cifra{display:flex;align-items:baseline;gap:9px}
@@ -66,7 +102,7 @@ table.tot tr.off{opacity:.3}
 .dual{font-size:11.5px;color:var(--texto-2);line-height:1.75}
 .dual b{color:var(--texto);font-weight:600}
 
-#filtros{top:12px;left:320px;width:262px;padding:13px 15px 14px}
+#filtros{padding:13px 15px 14px}
 #filtros .titulo{font-size:11px;color:var(--texto-2);margin-bottom:10px}
 .campo{margin-bottom:9px}
 .campo label{display:block;font-size:11px;color:var(--texto-3);margin-bottom:3px}
@@ -102,8 +138,7 @@ table.tot tr.off{opacity:.3}
 #resultado .grande{font-size:19px;font-weight:600;color:var(--texto);
                    letter-spacing:-.02em}
 
-#capas{bottom:calc(var(--gaveta) + 12px);left:12px;width:250px;
-       padding:11px 14px 12px;transition:bottom .22s cubic-bezier(.4,0,.2,1)}
+#capas{padding:11px 14px 12px}
 #capas .titulo{font-size:11px;color:var(--texto-2);margin-bottom:8px}
 .fila-capa{display:flex;align-items:center;gap:9px;padding:4px 0;
            cursor:pointer;font-size:12.5px;user-select:none}
@@ -175,7 +210,7 @@ dl.attr dd{margin:0;flex:1;text-align:right;word-break:break-word}
              z-index:600;padding:7px 17px;font-size:12px}
 #gaveta.abierta ~ #abrir-tabla{display:none}
 
-#estado{bottom:calc(var(--gaveta) + 12px);right:12px;padding:7px 13px;
+#estado{bottom:calc(var(--gaveta) + 12px);left:12px;padding:7px 13px;
         font-size:11.5px;color:var(--texto-2);
         transition:bottom .22s cubic-bezier(.4,0,.2,1)}
 #estado b{color:var(--texto);font-weight:600}
@@ -206,13 +241,8 @@ dl.attr dd{margin:0;flex:1;text-align:right;word-break:break-word}
   color:var(--texto);font-size:11.5px;box-shadow:none}
 .leaflet-tooltip.zona::before{display:none}
 
-@media (max-width:1000px){
-  #filtros{left:12px;top:auto;bottom:calc(var(--gaveta) + 12px);width:296px}
-  #capas{display:none}
-}
-@media (max-width:720px){
-  #cabecera{width:auto;right:12px}
-  #filtros{right:12px;width:auto}
+@media (max-width:820px){
+  .cajon{left:56px;right:12px;width:auto}
   #ficha{top:auto;bottom:calc(var(--gaveta) + 12px);left:12px;right:12px;
          width:auto;max-height:46vh}
   #estado{display:none}
@@ -231,7 +261,25 @@ dl.attr dd{margin:0;flex:1;text-align:right;word-break:break-word}
   <div id="carga-detalle" style="font-size:11.5px;color:#5f7386"></div>
 </div>
 
-<div class="panel" id="cabecera">
+<!-- ══════════ barra de herramientas ══════════ -->
+<div id="barra">
+  <button data-cajon="cabecera" data-tip="Avance" aria-label="Avance">
+    <svg viewBox="0 0 24 24"><path d="M3 20h18M6 20V10M12 20V4M18 20v-7"/></svg>
+  </button>
+  <button data-cajon="filtros" data-tip="Filtrar" aria-label="Filtrar">
+    <svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
+  </button>
+  <button data-cajon="capas" data-tip="Capas" aria-label="Capas">
+    <svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>
+  </button>
+  <div class="sep"></div>
+  <button id="b-tabla" data-tip="Tabla de predios" aria-label="Tabla">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/>
+      <path d="M3 10h18M9 10v10"/></svg>
+  </button>
+</div>
+
+<div class="panel cajon" id="cabecera">
   <h1>Avance de actualización catastral</h1>
   <div class="sub" id="sub">Valledupar · corte —</div>
   <div class="cifra">
@@ -245,7 +293,7 @@ dl.attr dd{margin:0;flex:1;text-align:right;word-break:break-word}
   <div class="dual" id="dual"></div>
 </div>
 
-<div class="panel" id="filtros">
+<div class="panel cajon" id="filtros">
   <div class="titulo">Filtrar</div>
   <div class="campo" id="buscar-wrap">
     <label for="q">Buscar predio, barrio o manzana</label>
@@ -264,7 +312,7 @@ dl.attr dd{margin:0;flex:1;text-align:right;word-break:break-word}
   <div id="resultado"></div>
 </div>
 
-<div class="panel" id="capas">
+<div class="panel cajon" id="capas">
   <div class="titulo">Capas</div>
   <div id="lista-capas"></div>
   <details id="det-calidad">
@@ -287,8 +335,6 @@ dl.attr dd{margin:0;flex:1;text-align:right;word-break:break-word}
     <dl class="attr" id="f-attr"></dl>
   </div>
 </div>
-
-<button class="panel btn" id="abrir-tabla">Ver tabla de predios</button>
 
 <div id="gaveta">
   <div class="barra">
@@ -403,6 +449,24 @@ const lienzo = L.canvas({pane:'pts', padding:.3});
 const capaPts = L.layerGroup([],{pane:'pts'}).addTo(map);
 const capaResalte = L.layerGroup([],{pane:'resalte'}).addTo(map);
 
+/* ══════════ BARRA DE HERRAMIENTAS ══════════
+   Solo un cajon abierto a la vez: el mapa queda despejado y el
+   encuadre sabe exactamente cuanto espacio esta ocupado.        */
+
+S.cajon = null;
+
+function abrirCajon(id){
+  const abrir = S.cajon !== id;
+  document.querySelectorAll('.cajon').forEach(c =>
+    c.classList.toggle('abierto', abrir && c.id === id));
+  document.querySelectorAll('#barra button[data-cajon]').forEach(b =>
+    b.classList.toggle('on', abrir && b.dataset.cajon === id));
+  S.cajon = abrir ? id : null;
+}
+
+document.querySelectorAll('#barra button[data-cajon]').forEach(b =>
+  b.onclick = () => abrirCajon(b.dataset.cajon));
+
 /* ── carga ── */
 const detalle = t => {
   const d = document.getElementById('carga-detalle');
@@ -444,6 +508,7 @@ async function arrancar(){
     dibujarPoligonos();
 
     document.getElementById('carga').style.display = 'none';
+    abrirCajon('cabecera');
     traer('ficha.json', false).then(f => { S.ficha = f; });
     cargarZonas();
   }catch(e){
@@ -780,7 +845,9 @@ map.on('mousemove', e => {
     S.hover = p;
     if(!p){
       tt.style.display = 'none';
-      map.getContainer().style.cursor = '';
+      // no se toca el cursor si esta sobre un poligono interactivo
+      if(map.getContainer().style.cursor === 'pointer')
+        map.getContainer().style.cursor = '';
       return;
     }
     const fila = S.tabla.filas[p.i];
@@ -797,6 +864,9 @@ map.on('mousemove', e => {
 map.on('mouseout', () => { tt.style.display='none'; S.hover = null; });
 
 map.on('click', e => {
+  // si el clic cayo sobre un poligono de construccion, ese ya abrio
+  // su propia ficha y no hay que reabrir la del predio
+  if(e.originalEvent && e.originalEvent._construccion) return;
   const p = puntoEn(e.latlng, e.containerPoint);
   if(p) abrirFicha(p.i);
 });
@@ -850,7 +920,14 @@ function inicializarPoligonos(){
     const capa = L.geoJSON(null, {
       pane:'poli',
       renderer: L.canvas({pane:'poli', padding:.2}),
-      interactive:false,
+      interactive: id === 'construcciones',   // solo estas abren ficha
+      onEachFeature: id === 'construcciones'
+        ? (f, l) => l.on('click', ev => {
+            if(ev.originalEvent) ev.originalEvent._construccion = true;
+            L.DomEvent.stopPropagation(ev);
+            abrirFichaConstruccion(f.properties);
+          })
+        : undefined,
       style: f => {
         const e = est['*'] || est[String(f.properties.c)] || est['1'];
         return {
@@ -1171,7 +1248,84 @@ document.addEventListener('keydown', e => {
   else if(S.seleccion !== null) cerrarFicha();
   else if(document.getElementById('gaveta').classList.contains('abierta'))
     cerrarGaveta();
+  else if(S.cajon) abrirCajon(S.cajon);
 });
+
+/* ══════════ FICHA DE CONSTRUCCION ══════════
+   Los atributos viajan dentro del propio poligono (los escribe el
+   exportador), asi que abrir la ficha no dispara ninguna consulta. */
+
+const CAMPOS_CONSTR = [
+  ['d', 'Identificador'],
+  ['p', 'Planta'],
+  ['t', 'Tipo de unidad'],
+  ['u', 'Uso'],
+  ['a', 'Área construida (m²)', 2],
+  ['n', 'Total plantas'],
+  ['q', 'Puntaje'],
+  ['x', 'Tipo de anexo']
+];
+
+function abrirFichaConstruccion(pr){
+  const i = pr.i;
+  const fila = S.tabla.filas[i];
+  if(!fila) return;
+
+  S.seleccion = i;
+  resaltar(i);
+  resaltarLote(i);
+
+  document.getElementById('f-npn').textContent = fila[S.col.npn];
+  const est = S.val(fila, 'estado');
+  const info = ESTADOS[est] || {label:est, color:'#888'};
+  const chip = document.getElementById('f-chip');
+  chip.textContent = info.label;
+  chip.style.background = info.color + '22';
+  chip.style.color = info.color;
+
+  const dl = document.getElementById('f-attr');
+  dl.innerHTML = '';
+
+  const conv = pr.c === 0
+    ? {t:'No convencional', c:'#ff5252'}
+    : {t:'Convencional',    c:'#4a9eff'};
+  dl.appendChild(seccion('Construcción · ' + conv.t, conv.c));
+
+  let hay = false;
+  for(const [k, label, dec] of CAMPOS_CONSTR){
+    let v = pr[k];
+    if(v === null || v === undefined || v === '') continue;
+    if(dec !== undefined && typeof v === 'number')
+      v = v.toLocaleString('es-CO', {minimumFractionDigits:dec,
+                                     maximumFractionDigits:dec});
+    const d = document.createElement('div');
+    d.innerHTML = '<dt>' + label + '</dt><dd>' + v + '</dd>';
+    dl.appendChild(d);
+    hay = true;
+  }
+  if(!hay){
+    const d = document.createElement('div');
+    d.innerHTML = '<dt style="flex:1;color:var(--texto-3)">'
+                + 'Sin datos de calificación</dt><dd></dd>';
+    dl.appendChild(d);
+  }
+
+  dl.appendChild(seccion('Predio', 'var(--texto-2)'));
+  agregarAttr(dl, S.tabla, i, ['npn','estado']);
+  if(S.ficha) agregarAttr(dl, S.ficha, i, ['estado']);
+
+  document.getElementById('ficha').classList.add('abierta');
+  marcarFilaTabla(i);
+}
+
+function seccion(texto, color){
+  const d = document.createElement('div');
+  d.style.cssText = 'display:block;border:0;padding:11px 0 4px;'
+    + 'font-size:11px;letter-spacing:.03em;text-transform:uppercase;'
+    + 'color:' + color;
+  d.textContent = texto;
+  return d;
+}
 
 /* ── tabla con scroll virtual ── */
 const COLS = ['npn','barrio','uit','estado','etapa'];
@@ -1299,16 +1453,21 @@ function marcarFilaTabla(i){
 const gaveta = document.getElementById('gaveta');
 function abrirGaveta(){
   gaveta.classList.add('abierta');
+  document.getElementById('b-tabla').classList.add('on');
   document.documentElement.style.setProperty('--gaveta','290px');
   setTimeout(() => map.invalidateSize(), 240);
   pintarTabla();
 }
 function cerrarGaveta(){
   gaveta.classList.remove('abierta');
+  document.getElementById('b-tabla').classList.remove('on');
   document.documentElement.style.setProperty('--gaveta','0px');
   setTimeout(() => map.invalidateSize(), 240);
 }
-document.getElementById('abrir-tabla').onclick = abrirGaveta;
+document.getElementById('b-tabla').onclick = () => {
+  const g = document.getElementById('gaveta');
+  g.classList.contains('abierta') ? cerrarGaveta() : abrirGaveta();
+};
 document.getElementById('g-cerrar').onclick = cerrarGaveta;
 
 document.getElementById('g-todos').onclick = function(){
@@ -1455,7 +1614,9 @@ function volarAZona(tipo, valor){
    Los paneles flotan sobre el mapa, así que el centro geométrico
    no es el centro visible: el padding se calcula por lado. */
 function encuadrar(caja){
-  const anchoPanelIzq = window.innerWidth > 1000 ? 600 : 40;
+  // el padding se calcula con lo que hay abierto en ese momento
+  const izq = 56 + (S.cajon ? 300 : 0);
+  const anchoPanelIzq = Math.min(izq, window.innerWidth * .45);
   const anchoPanelDer = document.getElementById('ficha')
                           .classList.contains('abierta') ? 330 : 40;
   const alturaGaveta = document.getElementById('gaveta')
