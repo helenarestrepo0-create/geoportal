@@ -930,9 +930,20 @@ map.on('mousemove', e => {
   });
 });
 
-map.on('mouseout', () => { tt.style.display='none'; S.hover = null; });
+/* El tooltip se dibuja en coordenadas de pantalla, asi que cualquier
+   cosa que mueva el mapa lo deja pegado en el sitio equivocado: se
+   oculta en todos esos casos, no solo al salir del mapa. */
+function ocultarTooltip(){
+  tt.style.display = 'none';
+  S.hover = null;
+  map.getContainer().style.cursor = '';
+}
+
+map.on('mouseout zoomstart movestart dragstart', ocultarTooltip);
+document.getElementById('mapa').addEventListener('mouseleave', ocultarTooltip);
 
 map.on('click', e => {
+  ocultarTooltip();
   // 1) el punto del predio tiene prioridad: es el objetivo mas pequeno
   const p = puntoEn(e.latlng, e.containerPoint);
   if(p) return abrirFicha(p.i);
