@@ -845,9 +845,22 @@ map.on('mousemove', e => {
     S.hover = p;
     if(!p){
       tt.style.display = 'none';
-      // no se toca el cursor si esta sobre un poligono interactivo
-      if(map.getContainer().style.cursor === 'pointer')
+      // solo en zoom cerrado: mas lejos hay demasiadas y no se distinguen
+      const c = map.getZoom() >= 19 ? construccionEn(e.latlng) : null;
+      if(c){
+        const pr = c.properties;
+        const conv = pr.c === 0 ? 'No convencional' : 'Convencional';
+        tt.innerHTML = '<div>Construcción '
+          + (pr.d ? '<b>' + pr.d + '</b>' : '')
+          + (pr.p ? ' · ' + pr.p : '') + '</div>'
+          + '<div class="e">' + (pr.u || conv) + '</div>';
+        tt.style.display = 'block';
+        tt.style.left = (e.containerPoint.x + 14) + 'px';
+        tt.style.top  = (e.containerPoint.y + 14) + 'px';
+        map.getContainer().style.cursor = 'pointer';
+      }else{
         map.getContainer().style.cursor = '';
+      }
       return;
     }
     const fila = S.tabla.filas[p.i];
@@ -864,12 +877,62 @@ map.on('mousemove', e => {
 map.on('mouseout', () => { tt.style.display='none'; S.hover = null; });
 
 map.on('click', e => {
-  // si el clic cayo sobre un poligono de construccion, ese ya abrio
-  // su propia ficha y no hay que reabrir la del predio
-  if(e.originalEvent && e.originalEvent._construccion) return;
+  // 1) el punto del predio tiene prioridad: es el objetivo mas pequeno
   const p = puntoEn(e.latlng, e.containerPoint);
-  if(p) abrirFicha(p.i);
+  if(p) return abrirFicha(p.i);
+
+  // 2) si no, se mira si el clic cayo dentro de una construccion
+  const c = construccionEn(e.latlng);
+  if(c) return abrirFichaConstruccion(c.properties);
 });
+
+/* ¿Que construccion contiene este punto?
+
+   Con 190 mil poligonos no se puede preguntar a cada uno. Se filtra
+   primero por caja envolvente, que es una comparacion de cuatro
+   numeros, y solo sobre los pocos que pasan se hace la prueba
+   geometrica real. Si se solapan, gana el de menor area: suele ser
+   el anexo dibujado encima de la construccion principal.          */
+function construccionEn(latlng){
+  const P = S.poli.construcciones;
+  if(!P || !map.hasLayer(P.capa)) return null;
+
+  const x = latlng.lng, y = latlng.lat;
+  let mejor = null, areaMin = Infinity;
+
+  P.capa.eachLayer(l => {
+    const b = l._bounds || (l._bounds = l.getBounds());
+    // descarte por caja: cuatro comparaciones antes de tocar la geometria
+    if(x < b.getWest() || x > b.getEast() ||
+       y < b.getSouth() || y > b.getNorth()) return;
+    if(!dentroDe(l.feature.geometry, x, y)) return;
+    // si dos se solapan gana el mas pequeno: suele ser el anexo
+    // dibujado encima de la construccion principal
+    const a = (b.getEast() - b.getWest()) * (b.getNorth() - b.getSouth());
+    if(a < areaMin){ areaMin = a; mejor = l.feature; }
+  });
+  return mejor;
+}
+
+/* Punto en poligono por el metodo del rayo: se cuenta cuantas veces
+   una linea horizontal cruza el borde. Impar = dentro.            */
+function dentroDe(geom, x, y){
+  const anillos = geom.type === 'MultiPolygon'
+    ? geom.coordinates.flat()
+    : geom.coordinates;
+  let dentro = false;
+  for(const anillo of anillos){
+    let d = false;
+    for(let i = 0, j = anillo.length - 1; i < anillo.length; j = i++){
+      const xi = anillo[i][0], yi = anillo[i][1];
+      const xj = anillo[j][0], yj = anillo[j][1];
+      if((yi > y) !== (yj > y) &&
+         x < (xj - xi) * (y - yi) / (yj - yi) + xi) d = !d;
+    }
+    if(d) dentro = !dentro;      // los anillos interiores son huecos
+  }
+  return dentro;
+}
 
 function puntoEn(latlng, cp){
   if(map.getZoom() < CFG.zoomPuntos) return null;
@@ -920,14 +983,7 @@ function inicializarPoligonos(){
     const capa = L.geoJSON(null, {
       pane:'poli',
       renderer: L.canvas({pane:'poli', padding:.2}),
-      interactive: id === 'construcciones',   // solo estas abren ficha
-      onEachFeature: id === 'construcciones'
-        ? (f, l) => l.on('click', ev => {
-            if(ev.originalEvent) ev.originalEvent._construccion = true;
-            L.DomEvent.stopPropagation(ev);
-            abrirFichaConstruccion(f.properties);
-          })
-        : undefined,
+      interactive:false,   // el clic se resuelve con un solo listener
       style: f => {
         const e = est['*'] || est[String(f.properties.c)] || est['1'];
         return {
