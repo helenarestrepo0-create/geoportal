@@ -1,6 +1,6 @@
 {
  "corte": "20260901",
- "generado": "2026-09-01T14:56:01",
+ "generado": "2026-09-01T18:51:30",
  "total": 129828,
  "estados": {
   "EN_PROCESO": 81374,
@@ -106,20 +106,197 @@
  "puntos_en_mapa": 125041,
  "poligonos": {
   "terrenos": {
-   "archivo": "terrenos.fgb",
+   "carpeta": "poligonos",
+   "piezas": {
+    "UIT_04": {
+     "archivo": "terrenos_UIT_04.fgb",
+     "n": 7635,
+     "mb": 2.0,
+     "caja": [
+      -73.271221,
+      10.463876,
+      -73.235078,
+      10.502301
+     ]
+    },
+    "UIT_03": {
+     "archivo": "terrenos_UIT_03.fgb",
+     "n": 15799,
+     "mb": 4.0,
+     "caja": [
+      -73.253189,
+      10.428113,
+      -73.213303,
+      10.477004
+     ]
+    },
+    "UIT_05": {
+     "archivo": "terrenos_UIT_05.fgb",
+     "n": 16035,
+     "mb": 4.0,
+     "caja": [
+      -73.271058,
+      10.420748,
+      -73.241383,
+      10.464498
+     ]
+    },
+    "UIT_06": {
+     "archivo": "terrenos_UIT_06.fgb",
+     "n": 21038,
+     "mb": 5.3,
+     "caja": [
+      -73.294032,
+      10.437526,
+      -73.25304,
+      10.468974
+     ]
+    },
+    "UIT_07": {
+     "archivo": "terrenos_UIT_07.fgb",
+     "n": 25345,
+     "mb": 0,
+     "caja": [
+      -73.297961,
+      10.452933,
+      -73.257119,
+      10.489015
+     ]
+    },
+    "UIT_01": {
+     "archivo": "terrenos_UIT_01.fgb",
+     "n": 7943,
+     "mb": 2.0,
+     "caja": [
+      -73.296866,
+      10.463213,
+      -73.24119,
+      10.506768
+     ]
+    },
+    "UIT_02": {
+     "archivo": "terrenos_UIT_02.fgb",
+     "n": 2015,
+     "mb": 0.5,
+     "caja": [
+      -73.236174,
+      10.442225,
+      -73.223079,
+      10.45703
+     ]
+    }
+   },
    "n": 95810,
    "zoom_min": 17,
-   "color": "#ffd54f",
    "label": "Terrenos",
-   "relleno": 0
+   "estilos": {
+    "*": {
+     "color": "#000000",
+     "label": "Terrenos",
+     "weight": 1.5,
+     "relleno": 0
+    }
+   }
   },
   "construcciones": {
-   "archivo": "construcciones.fgb",
+   "carpeta": "poligonos",
+   "piezas": {
+    "UIT_01": {
+     "archivo": "construcciones_UIT_01.fgb",
+     "n": 29193,
+     "mb": 8.2,
+     "caja": [
+      -73.295066,
+      10.475384,
+      -73.2412,
+      10.506084
+     ]
+    },
+    "UIT_04": {
+     "archivo": "construcciones_UIT_04.fgb",
+     "n": 15479,
+     "mb": 4.7,
+     "caja": [
+      -73.270992,
+      10.463876,
+      -73.235288,
+      10.502122
+     ]
+    },
+    "UIT_03": {
+     "archivo": "construcciones_UIT_03.fgb",
+     "n": 30941,
+     "mb": 8.8,
+     "caja": [
+      -73.252549,
+      10.428161,
+      -73.223653,
+      10.4764
+     ]
+    },
+    "UIT_02": {
+     "archivo": "construcciones_UIT_02.fgb",
+     "n": 5814,
+     "mb": 1.7,
+     "caja": [
+      -73.23613,
+      10.443048,
+      -73.224715,
+      10.456361
+     ]
+    },
+    "UIT_05": {
+     "archivo": "construcciones_UIT_05.fgb",
+     "n": 30668,
+     "mb": 0,
+     "caja": [
+      -73.26902,
+      10.420814,
+      -73.241424,
+      10.464546
+     ]
+    },
+    "UIT_06": {
+     "archivo": "construcciones_UIT_06.fgb",
+     "n": 39663,
+     "mb": 10.8,
+     "caja": [
+      -73.28941,
+      10.43838,
+      -73.253162,
+      10.468949
+     ]
+    },
+    "UIT_07": {
+     "archivo": "construcciones_UIT_07.fgb",
+     "n": 39926,
+     "mb": 11.0,
+     "caja": [
+      -73.296311,
+      10.456525,
+      -73.257287,
+      10.488982
+     ]
+    }
+   },
    "n": 191684,
    "zoom_min": 18,
-   "color": "#ef5350",
    "label": "Construcciones",
-   "relleno": 0.28
+   "estilos": {
+    "1": {
+     "color": "#4a9eff",
+     "label": "Convencional",
+     "weight": 1.2,
+     "relleno": 0.2
+    },
+    "0": {
+     "color": "#ff5252",
+     "label": "No convencional",
+     "weight": 1.4,
+     "relleno": 0.16,
+     "guion": "4,3"
+    }
+   }
   }
  },
  "opcionales": [

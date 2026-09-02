@@ -321,7 +321,7 @@ const CFG = {
   orto:'https://xyz1.falconprecision.co/valledupar-urbano/Z{z}/{y}/{x}.png',
   centro:[10.4631,-73.2532], zoom:14,
   limites:[[10.38,-73.32],[10.55,-73.18]],
-  zoomPuntos:15,
+  zoomPuntos:17,        // aparecen junto con los terrenos
   filaAlto:26
 };
 
@@ -364,7 +364,29 @@ L.control.scale({imperial:false, position:'bottomright'}).addTo(map);
 
 const orto = L.tileLayer(CFG.orto,{
   attribution:'Ortofoto Falcon Precision',
-  minZoom:0, maxZoom:22, maxNativeZoom:22, bounds:CFG.limites}).addTo(map);
+  minZoom:0, maxZoom:22, maxNativeZoom:22,
+  bounds:CFG.limites, keepBuffer:3}).addTo(map);
+
+// Si una tesela no existe, se sustituye por el trozo correspondiente
+// de la del nivel anterior. Se recorta y escala con CSS para que quede
+// EXACTAMENTE sobre su lugar: si se pusiera la tesela del nivel de
+// arriba tal cual, cubriria cuatro veces el area y la foto se veria
+// corrida respecto a los poligonos.
+orto.on('tileerror', e => {
+  const t = e.tile, c = e.coords;
+  if(t.dataset.sustituida || c.z < 13) return;
+  t.dataset.sustituida = '1';
+
+  const px = Math.floor(c.x / 2), py = Math.floor(c.y / 2);
+  const dx = c.x - px * 2, dy = c.y - py * 2;
+
+  t.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+  t.style.backgroundImage = 'url("' + CFG.orto
+      .replace('{z}', c.z - 1).replace('{x}', px).replace('{y}', py) + '")';
+  t.style.backgroundSize = '200% 200%';
+  t.style.backgroundPosition = (-dx * 100) + '% ' + (-dy * 100) + '%';
+  t.style.imageRendering = 'auto';
+});
 
 const etiquetas = L.tileLayer(
   'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
@@ -708,7 +730,7 @@ function _redibujar(){
   document.getElementById('e-zoom').textContent = z;
 
   if(z < CFG.zoomPuntos){
-    document.getElementById('e-vis').textContent = '—';
+    document.getElementById('e-vis').textContent = 'acerca para ver predios';
     return;
   }
 
@@ -820,50 +842,110 @@ function inicializarPoligonos(){
 
   for(const id in cfg){
     const c = cfg[id];
+    // los estilos vienen del manifiesto: '*' para todos, o por valor
+    // del campo 'c' (1 convencional, 0 no convencional)
+    const est = c.estilos || {'*':{color:c.color||'#888', weight:1,
+                                   relleno:c.relleno||0}};
+
     const capa = L.geoJSON(null, {
       pane:'poli',
       renderer: L.canvas({pane:'poli', padding:.2}),
       interactive:false,
       style: f => {
-        const col = (ESTADOS[f.properties.e] || {}).color || c.color;
-        return {color:c.color, weight:1, opacity:.85,
-                fillColor:col, fillOpacity:c.relleno};
+        const e = est['*'] || est[String(f.properties.c)] || est['1'];
+        return {
+          color: e.color,
+          weight: e.weight || 1,
+          opacity: .95,
+          fillColor: e.color,
+          fillOpacity: e.relleno || 0,
+          dashArray: e.guion || null,
+          lineJoin: 'round'
+        };
       }
     });
+
     S.poli[id] = {
-      cfg:c, capa:capa,
-      activa:true,                              // el usuario puede apagarla
-      cargados:new Set(),                       // celdas ya traidas
-      vistos:new Set(),                         // features ya dibujados
-      unico:(id === 'terrenos'),                // 1 poligono por predio
-      fgb:/\.fgb$/i.test(c.archivo),
-      cargando:false, todo:false, reintento:false
+      cfg:c, capa:capa, est:est,
+      activa:true,
+      areas:[],                 // rectangulos ya consultados
+      dibujados:new Set(),      // poligonos ya en el mapa
+      planos:new Set(),         // piezas GeoJSON ya traidas
+      cargando:false, fallo:false
     };
-    cont.appendChild(filaCapa(c.label, c.color, null, true, c.n,
+
+    // una fila por capa, con las muestras de color de sus estilos
+    const claves = Object.keys(est);
+    const color = est[claves[0]].color;
+    cont.appendChild(filaCapa(c.label, color, null, true, c.n,
       on => { S.poli[id].activa = on;
               if(!on) map.removeLayer(capa); else dibujarPoligonos(); }));
+
+    if(claves.length > 1) cont.appendChild(subLeyenda(est));
   }
 }
 
-/* Rejilla de descarga: el mapa se divide en celdas fijas y se pide
-   una sola vez cada celda. Sin esto, cada paneo minimo relanzaria
-   la lectura de una zona ya traida.                                */
-const CELDA_POLI = 0.006;   // ~660 m
+/* muestra los subtipos de una capa (convencional / no convencional) */
+function subLeyenda(est){
+  const d = document.createElement('div');
+  d.style.cssText = 'padding:1px 0 4px 26px;font-size:11px;color:var(--texto-3)';
+  d.innerHTML = Object.keys(est).map(k => {
+    const e = est[k];
+    const linea = e.guion
+      ? `border-top:2px dashed ${e.color}`
+      : `border-top:2px solid ${e.color}`;
+    return `<span style="display:inline-flex;align-items:center;gap:5px;
+             margin-right:11px">
+             <i style="width:13px;${linea};display:inline-block"></i>
+             ${e.label}</span>`;
+  }).join('');
+  return d;
+}
 
-function celdasDe(b){
+/* Piezas que intersectan la vista. Los archivos van partidos por UIT
+   y cada uno declara su caja, asi que se abre solo lo necesario. */
+function piezasEnVista(P, b){
   const r = [];
-  for(let x = Math.floor(b.getWest()/CELDA_POLI);
-          x <= Math.floor(b.getEast()/CELDA_POLI); x++)
-    for(let y = Math.floor(b.getSouth()/CELDA_POLI);
-            y <= Math.floor(b.getNorth()/CELDA_POLI); y++)
-      r.push(x + ':' + y);
+  for(const z in P.cfg.piezas){
+    const c = P.cfg.piezas[z].caja;
+    if(c[2] < b.getWest() || c[0] > b.getEast() ||
+       c[3] < b.getSouth() || c[1] > b.getNorth()) continue;
+    r.push(z);
+  }
   return r;
+}
+
+/* Registro de lo ya descargado.
+
+   Se guardan los rectangulos consultados. Antes de pedir, se comprueba
+   si la vista ya esta contenida en alguno: si lo esta, no se pide nada.
+   Se hacia con una rejilla fija, pero a zoom alto la pantalla es mas
+   pequena que una celda y quedaban huecos sin cargar.
+
+   Los poligonos ya dibujados se registran por su identificador para
+   no repetirlos cuando dos consultas se solapan.                    */
+
+function cubierto(P, b){
+  const w = b.getWest(), e = b.getEast(),
+        s2 = b.getSouth(), n = b.getNorth();
+  for(const r of P.areas)
+    if(r[0] <= w && r[1] <= s2 && r[2] >= e && r[3] >= n) return true;
+  return false;
+}
+
+function clave(f){
+  // un predio puede tener varias construcciones: se distinguen por
+  // el primer vertice, que es unico para cada poligono
+  const g = f.geometry;
+  let c = g.coordinates;
+  while(Array.isArray(c) && Array.isArray(c[0])) c = c[0];
+  return f.properties.i + '|' + c[0].toFixed(6) + ',' + c[1].toFixed(6);
 }
 
 let pendPoli = null;
 function dibujarPoligonos(){
   clearTimeout(pendPoli);
-  pendPoli = setTimeout(_dibujarPoligonos, 260);
+  pendPoli = setTimeout(_dibujarPoligonos, 220);
 }
 
 async function _dibujarPoligonos(){
@@ -877,79 +959,82 @@ async function _dibujarPoligonos(){
       continue;
     }
     if(!map.hasLayer(P.capa)) P.capa.addTo(map);
+    if(P.cargando) continue;
 
-    const b = map.getBounds().pad(.12);
-    const nuevas = celdasDe(b).filter(c => !P.cargados.has(c));
-    if(!nuevas.length) continue;
+    // se pide un area mayor que la pantalla: al panear un poco ya
+    // esta cargado y no hay que volver a pedir
+    const b = map.getBounds().pad(.55);
+    if(cubierto(P, b)) continue;
 
-    if(P.cargando) continue;          // una lectura a la vez por capa
     P.cargando = true;
-    nuevas.forEach(c => P.cargados.add(c));
+    const caja = {minX:b.getWest(), minY:b.getSouth(),
+                  maxX:b.getEast(), maxY:b.getNorth()};
+    let leidos = 0;
 
     try{
-      if(P.fgb){
-        const it = flatgeobuf.deserialize(CFG.datos + P.cfg.archivo, {
-          minX:b.getWest(),  minY:b.getSouth(),
-          maxX:b.getEast(),  maxY:b.getNorth()
-        });
-        let n = 0;
-        for await (const f of it){
-          // la consulta por caja repite lo ya traido: se descarta aqui
-          n++;
-          if(P.unico && P.vistos.has(f.properties.i)) continue;
-          P.capa.addData(f);
-          if(P.unico) P.vistos.add(f.properties.i);
-          if(n % 400 === 0) await new Promise(r => setTimeout(r, 0));
+      for(const zona of piezasEnVista(P, b)){
+        const pieza = P.cfg.piezas[zona];
+        const rel = P.cfg.carpeta + '/' + pieza.archivo;
+        try{
+          if(/\.fgb$/i.test(pieza.archivo)){
+            const it = flatgeobuf.deserialize(CFG.datos + rel, caja);
+            let n = 0;
+            for await (const f of it){
+              if(!f || !f.geometry) continue;
+              const k = clave(f);
+              if(P.dibujados.has(k)) continue;
+              P.dibujados.add(k);
+              P.capa.addData(f);
+              leidos++;
+              // ceder el hilo: el mapa sigue respondiendo mientras carga
+              if(++n % 400 === 0) await new Promise(r => setTimeout(r, 0));
+            }
+          }else if(!P.planos.has(zona)){
+            P.planos.add(zona);
+            const d = await traer(rel, false);
+            if(d) P.capa.addData(d);
+          }
+        }catch(err){
+          console.warn('pieza ' + pieza.archivo + ': ' + err.message);
+          P.fallo = true;
         }
-      }else if(!P.todo){
-        P.todo = true;               // GeoJSON: un solo archivo, una vez
-        const d = await traer(P.cfg.archivo, false);
-        if(d) P.capa.addData(d);
       }
-    }catch(e){
-      console.warn('polígonos ' + id + ':', e.message);
-      nuevas.forEach(c => P.cargados.delete(c));   // permitir reintento
-      if(P.fgb && !P.reintento){
-        P.reintento = true;          // el servidor no admite rangos:
-        P.fgb = false;               // se cae a lectura completa
+
+      if(!P.fallo){
+        P.areas.push([caja.minX, caja.minY, caja.maxX, caja.maxY]);
+        // solo se conservan las ultimas: comprobar 200 rectangulos
+        // en cada paneo saldria mas caro que volver a pedir
+        if(P.areas.length > 40) P.areas.splice(0, P.areas.length - 40);
       }
+      P.fallo = false;
+
+      // liberar memoria si se acumulo demasiado
+      if(P.dibujados.size > 120000) limpiarLejanos(P);
+
     }finally{
       P.cargando = false;
     }
   }
 }
 
-/* Resalta el lote del predio abierto. Si los terrenos ya estan
-   dibujados, se busca ahi; si no, se pide solo esa area.          */
-async function resaltarLote(i){
+/* Con muchos poligonos acumulados el mapa se vuelve pesado.
+   Se descarta todo y se vuelve a cargar lo visible.          */
+function limpiarLejanos(P){
+  P.capa.clearLayers();
+  P.dibujados.clear();
+  P.areas.length = 0;
+}
+
+/* Resalta el lote del predio abierto, si ya esta dibujado */
+function resaltarLote(i){
   const P = S.poli.terrenos;
-  if(!P) return;
-
-  let hallado = false;
+  if(!P || !map.hasLayer(P.capa)) return;
   P.capa.eachLayer(l => {
-    if(hallado || !l.feature || l.feature.properties.i !== i) return;
-    hallado = true;
+    if(!l.feature || l.feature.properties.i !== i) return;
     L.geoJSON(l.feature, {pane:'resalte', interactive:false,
-      style:{color:'#4cc2ff', weight:2.5,
-             fillColor:'#4cc2ff', fillOpacity:.18}}).addTo(capaResalte);
+      style:{color:'#4cc2ff', weight:3,
+             fillColor:'#4cc2ff', fillOpacity:.22}}).addTo(capaResalte);
   });
-  if(hallado || !P.fgb) return;
-
-  const p = S.porFila.get(i);
-  if(!p) return;
-  const d = 0.0012;
-  try{
-    const it = flatgeobuf.deserialize(CFG.datos + P.cfg.archivo,
-      {minX:p.x-d, minY:p.y-d, maxX:p.x+d, maxY:p.y+d});
-    for await (const f of it){
-      if(f.properties.i !== i) continue;
-      if(S.seleccion !== i) return;        // ya cambio la seleccion
-      L.geoJSON(f, {pane:'resalte', interactive:false,
-        style:{color:'#4cc2ff', weight:2.5,
-               fillColor:'#4cc2ff', fillOpacity:.18}}).addTo(capaResalte);
-      break;
-    }
-  }catch(e){ /* sin lote propio: se queda el circulo */ }
 }
 
 /* ── cabecera ── */
