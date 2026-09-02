@@ -151,24 +151,62 @@ table.tot tr.off{opacity:.3}
 #capas summary:hover{color:var(--texto)}
 .aviso{font-size:11px;color:var(--proceso);line-height:1.5;margin:7px 0 4px}
 
-#ficha{top:12px;right:12px;width:306px;
+#ficha{--acento:#4cc2ff;top:12px;right:12px;width:312px;
        max-height:calc(100vh - var(--gaveta) - 24px);
        padding:0;display:none;overflow:hidden;flex-direction:column}
 #ficha.abierta{display:flex}
-#ficha .cab{padding:12px 15px 11px;border-bottom:1px solid var(--linea);
-            display:flex;align-items:flex-start;gap:10px}
-#ficha .npn{font-size:13px;word-break:break-all;line-height:1.4}
+#ficha .cab{
+  padding:11px 14px 11px;border-bottom:1px solid var(--linea);
+  display:flex;align-items:flex-start;gap:10px;flex:none;
+  border-left:3px solid var(--acento);
+}
+#ficha .rotulo{font-size:10.5px;color:var(--texto-3);letter-spacing:.04em;
+               text-transform:uppercase;margin-bottom:2px}
+#ficha .npn{font-size:12.5px;word-break:break-all;line-height:1.35}
 #ficha .cerrar{margin-left:auto;background:none;border:0;color:var(--texto-2);
                font-size:19px;line-height:1;cursor:pointer;padding:0 2px}
 #ficha .cerrar:hover{color:#fff}
-#ficha .cuerpo{padding:4px 15px 15px;overflow-y:auto}
+#ficha .cuerpo{padding:0 0 12px;overflow-y:auto}
+
 .chip{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;
-      font-weight:600;margin:9px 0 2px}
-dl.attr{margin:0;font-size:12.5px}
-dl.attr div{display:flex;gap:10px;padding:5px 0;
-            border-bottom:1px solid rgba(43,56,68,.5)}
-dl.attr dt{color:var(--texto-2);flex:0 0 44%;font-size:11.5px}
-dl.attr dd{margin:0;flex:1;text-align:right;word-break:break-word}
+      font-weight:600}
+.tira-estado{padding:9px 14px 10px;border-bottom:1px solid var(--linea)}
+
+/* ── grupos plegables: mucha información sin abrumar ── */
+.grupo{border-bottom:1px solid var(--linea)}
+.grupo > summary{
+  list-style:none;cursor:pointer;user-select:none;
+  padding:9px 14px;display:flex;align-items:center;gap:8px;
+  font-size:11px;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--texto-2);transition:.12s;
+}
+.grupo > summary::-webkit-details-marker{display:none}
+.grupo > summary:hover{color:var(--texto);background:rgba(76,194,255,.05)}
+.grupo > summary .flecha{
+  margin-left:auto;font-size:9px;opacity:.5;transition:transform .16s;
+}
+.grupo[open] > summary .flecha{transform:rotate(90deg)}
+.grupo > summary .marca-g{
+  width:3px;height:12px;border-radius:2px;flex:none;background:var(--texto-3);
+}
+
+dl.attr{margin:0;font-size:12.5px;padding:0 14px 10px}
+dl.attr div{display:flex;gap:10px;align-items:baseline;padding:5px 0;
+            border-bottom:1px solid rgba(43,56,68,.35)}
+dl.attr div:last-child{border-bottom:0}
+dl.attr dt{color:var(--texto-2);flex:0 0 46%;font-size:11.5px;line-height:1.35}
+dl.attr dd{margin:0;flex:1;text-align:right;word-break:break-word;
+           font-variant-numeric:tabular-nums;line-height:1.35}
+dl.attr dd.dato{font-weight:500}
+
+/* dato destacado: lo que se busca de un vistazo */
+.destacados{display:flex;gap:1px;background:var(--linea);
+            border-bottom:1px solid var(--linea)}
+.destacados > div{flex:1;background:var(--tinta);padding:9px 12px}
+.destacados .k{font-size:10px;color:var(--texto-3);
+               text-transform:uppercase;letter-spacing:.03em}
+.destacados .v{font-size:16px;font-weight:600;letter-spacing:-.02em;
+               margin-top:1px;font-variant-numeric:tabular-nums}
 
 #gaveta{position:absolute;left:0;right:0;bottom:0;z-index:700;height:0;
         background:rgba(14,20,26,.97);border-top:1px solid var(--linea);
@@ -324,16 +362,13 @@ dl.attr dd{margin:0;flex:1;text-align:right;word-break:break-word}
 
 <div class="panel" id="ficha">
   <div class="cab">
-    <div>
-      <div style="font-size:11px;color:var(--texto-2)">Predio</div>
+    <div style="min-width:0">
+      <div class="rotulo" id="f-rotulo">Predio</div>
       <div class="npn mono" id="f-npn"></div>
     </div>
     <button class="cerrar" id="f-cerrar" aria-label="Cerrar ficha">×</button>
   </div>
-  <div class="cuerpo">
-    <span class="chip" id="f-chip"></span>
-    <dl class="attr" id="f-attr"></dl>
-  </div>
+  <div class="cuerpo" id="f-cuerpo"></div>
 </div>
 
 <div id="gaveta">
@@ -396,7 +431,7 @@ const S = {
   seleccion:null, hover:null,
   ambito:'todos',
   orden:{campo:'npn', asc:true},
-  zonas:{}, poli:{}, volando:false
+  zonas:{}, poli:{}, volando:false, selTipo:null
 };
 
 /* ── mapa ── */
@@ -448,6 +483,7 @@ map.createPane('resalte'); map.getPane('resalte').style.zIndex = 480;
 const lienzo = L.canvas({pane:'pts', padding:.3});
 const capaPts = L.layerGroup([],{pane:'pts'}).addTo(map);
 const capaResalte = L.layerGroup([],{pane:'resalte'}).addTo(map);
+const capaVista   = L.layerGroup([],{pane:'resalte'}).addTo(map);
 
 /* ══════════ BARRA DE HERRAMIENTAS ══════════
    Solo un cajon abierto a la vez: el mapa queda despejado y el
@@ -952,15 +988,6 @@ function puntoEn(latlng, cp){
   return mejor;
 }
 
-function resaltar(i){
-  capaResalte.clearLayers();
-  const p = S.porFila.get(i);
-  if(!p) return;
-  L.circleMarker([p.y,p.x],{
-    pane:'resalte', radius:11, color:'#4cc2ff', weight:2.5,
-    fillColor:'#4cc2ff', fillOpacity:.2, interactive:false
-  }).addTo(capaResalte);
-}
 
 /* ══════════ POLIGONOS (terreno y construccion) ══════════
 
@@ -1161,16 +1188,6 @@ function limpiarLejanos(P){
 }
 
 /* Resalta el lote del predio abierto, si ya esta dibujado */
-function resaltarLote(i){
-  const P = S.poli.terrenos;
-  if(!P || !map.hasLayer(P.capa)) return;
-  P.capa.eachLayer(l => {
-    if(!l.feature || l.feature.properties.i !== i) return;
-    L.geoJSON(l.feature, {pane:'resalte', interactive:false,
-      style:{color:'#4cc2ff', weight:3,
-             fillColor:'#4cc2ff', fillOpacity:.22}}).addTo(capaResalte);
-  });
-}
 
 /* ── cabecera ── */
 function pintarCabecera(){
@@ -1228,72 +1245,148 @@ function fechaCorte(c){
   return c.slice(6,8) + ' ' + m[+c.slice(4,6)-1] + ' ' + c.slice(0,4);
 }
 
-/* ── ficha ── */
-function abrirFicha(i){
-  const fila = S.tabla.filas[i];
-  if(!fila) return;
-  S.seleccion = i;
-  resaltar(i);
-  resaltarLote(i);
+/* ══════════ FICHA ══════════
 
-  document.getElementById('f-npn').textContent = fila[S.col.npn];
-  const est = S.val(fila,'estado');
-  const info = ESTADOS[est] || {label:est, color:'#888'};
-  const chip = document.getElementById('f-chip');
-  chip.textContent = info.label;
-  chip.style.background = info.color + '22';
-  chip.style.color = info.color;
+   El panel muestra bastantes campos, asi que se ordena en tres niveles:
+     1. cabecera con el identificador y el estado, siempre visible
+     2. dos o tres datos destacados, los que se buscan de un vistazo
+     3. el resto agrupado en secciones plegables
 
-  const dl = document.getElementById('f-attr');
-  dl.innerHTML = '';
-  agregarAttr(dl, S.tabla, i, ['npn','estado']);
+   La cabecera lleva el color de lo seleccionado, para que se sepa sin
+   leer si se hizo clic en un predio o en una construccion.          */
 
-  if(S.ficha){
-    agregarAttr(dl, S.ficha, i, ['estado']);
-  }else{
-    const d = document.createElement('div');
-    d.innerHTML = '<dt>Cargando detalle…</dt><dd></dd>';
-    dl.appendChild(d);
-    traer('ficha.json', false).then(f => {
-      S.ficha = f;
-      if(S.seleccion === i) abrirFicha(i);
-    });
+function pintarFicha({rotulo, titulo, acento, chip, destacados, grupos}){
+  const f = document.getElementById('ficha');
+  f.style.setProperty('--acento', acento);
+  document.getElementById('f-rotulo').textContent = rotulo;
+  document.getElementById('f-npn').textContent = titulo;
+
+  const c = document.getElementById('f-cuerpo');
+  c.innerHTML = '';
+
+  if(chip){
+    const t = document.createElement('div');
+    t.className = 'tira-estado';
+    t.innerHTML = '<span class="chip" style="background:' + chip.color
+      + '22;color:' + chip.color + '">' + chip.texto + '</span>';
+    c.appendChild(t);
   }
 
-  document.getElementById('ficha').classList.add('abierta');
-  marcarFilaTabla(i);
+  if(destacados && destacados.length){
+    const d = document.createElement('div');
+    d.className = 'destacados';
+    d.innerHTML = destacados.map(x =>
+      '<div><div class="k">' + x[0] + '</div>'
+      + '<div class="v">' + x[1] + '</div></div>').join('');
+    c.appendChild(d);
+  }
+
+  for(const g of grupos){
+    if(!g.filas.length) continue;
+    const det = document.createElement('details');
+    det.className = 'grupo';
+    if(g.abierto !== false) det.open = true;
+    det.innerHTML =
+      '<summary><span class="marca-g" style="background:'
+      + (g.color || 'var(--texto-3)') + '"></span>' + g.titulo
+      + '<span class="flecha">▶</span></summary>'
+      + '<dl class="attr">' + g.filas.map(fl =>
+          '<dt>' + fl[0] + '</dt><dd class="dato">' + fl[1] + '</dd>')
+          .map(x => '<div>' + x + '</div>').join('')
+      + '</dl>';
+    c.appendChild(det);
+  }
+  f.classList.add('abierta');
 }
 
-function agregarAttr(dl, fuente, i, omitir){
-  if(!fuente || !fuente.filas) return;
+function fmt(v, dec){
+  if(v === null || v === undefined || v === '') return null;
+  if(typeof v === 'number')
+    return v.toLocaleString('es-CO', {minimumFractionDigits:dec||0,
+                                      maximumFractionDigits:dec||0});
+  return String(v);
+}
+
+/* filas de una fuente (tabla.json / ficha.json) resolviendo catalogo */
+function filasDe(fuente, i, omitir, solo){
+  const r = [];
+  if(!fuente || !fuente.filas) return r;
   const fila = fuente.filas[i];
-  if(!fila) return;
+  if(!fila) return r;
   const cat = fuente.catalogo || {};
 
-  fuente.campos.forEach((c,j) => {
-    if(omitir.indexOf(c.key) >= 0) return;
+  fuente.campos.forEach((c, j) => {
+    if(omitir && omitir.indexOf(c.key) >= 0) return;
+    if(solo && solo.indexOf(c.key) < 0) return;
     let v = fila[j];
     if(v === null || v === undefined || v === '') return;
     if(cat[c.key]) v = cat[c.key][v];
     if(v === null || v === undefined || v === '') return;
-
     if(c.key === 'etapa')   v = ETAPAS[v] || v;
     if(c.key === 'ini')     v = v ? 'Sí' : 'No';
     if(c.key === 'entrega') v = v === 1 ? 'Primera' : (v === 2 ? 'Segunda' : v);
-    if(c.tipo === 'num' && typeof v === 'number')
-      v = v.toLocaleString('es-CO',{minimumFractionDigits:c.dec||0,
-                                    maximumFractionDigits:c.dec||0});
-
-    const d = document.createElement('div');
-    d.innerHTML = '<dt>' + c.label + '</dt><dd>' + v + '</dd>';
-    dl.appendChild(d);
+    const t = fmt(v, c.dec);
+    if(t !== null) r.push([c.label, t]);
   });
+  return r;
+}
+
+function valorDe(fuente, i, key){
+  if(!fuente || !fuente.filas) return null;
+  const j = fuente.campos.findIndex(c => c.key === key);
+  if(j < 0) return null;
+  const fila = fuente.filas[i];
+  if(!fila) return null;
+  let v = fila[j];
+  const cat = fuente.catalogo || {};
+  if(cat[key] && v !== null && v !== undefined) v = cat[key][v];
+  return v;
+}
+
+function abrirFicha(i){
+  const fila = S.tabla.filas[i];
+  if(!fila) return;
+  S.seleccion = i;
+  S.selTipo = 'predio';
+  resaltarSeleccion({tipo:'predio', i:i});
+
+  const est = S.val(fila, 'estado');
+  const info = ESTADOS[est] || {label:est, color:'#888'};
+
+  const area = valorDe(S.ficha, i, 'area_terr');
+  const cons = valorDe(S.ficha, i, 'area_const');
+  const uni  = valorDe(S.ficha, i, 'n_unid');
+
+  const destacados = [];
+  if(area != null) destacados.push(['Terreno m²', fmt(area, 0)]);
+  if(cons != null) destacados.push(['Construido m²', fmt(cons, 0)]);
+  if(uni  != null) destacados.push(['Unidades', fmt(uni, 0)]);
+
+  pintarFicha({
+    rotulo:'Predio',
+    titulo:fila[S.col.npn],
+    acento:info.color,
+    chip:{texto:info.label, color:info.color},
+    destacados:destacados.slice(0, 3),
+    grupos:[
+      {titulo:'Ubicación', color:'#4cc2ff',
+       filas:filasDe(S.tabla, i, null, ['uit','barrio'])
+              .concat(filasDe(S.ficha, i, null, ['manzana','direccion']))},
+      {titulo:'Avance', color:info.color,
+       filas:filasDe(S.tabla, i, ['npn','estado','uit','barrio'])},
+      {titulo:'Características', color:'#8ea3b6',
+       filas:filasDe(S.ficha, i, ['manzana','direccion','area_terr',
+                                  'area_const','n_unid','estado'])}
+    ]
+  });
+  marcarFilaTabla(i);
 }
 
 function cerrarFicha(){
   document.getElementById('ficha').classList.remove('abierta');
   capaResalte.clearLayers();
   S.seleccion = null;
+  S.selTipo = null;
   marcarFilaTabla(null);
 }
 document.getElementById('f-cerrar').onclick = cerrarFicha;
@@ -1308,79 +1401,98 @@ document.addEventListener('keydown', e => {
 });
 
 /* ══════════ FICHA DE CONSTRUCCION ══════════
-   Los atributos viajan dentro del propio poligono (los escribe el
-   exportador), asi que abrir la ficha no dispara ninguna consulta. */
+   Los atributos viajan dentro del propio poligono, asi que abrirla
+   no dispara ninguna consulta.                                     */
 
 const CAMPOS_CONSTR = [
   ['d', 'Identificador'],
   ['p', 'Planta'],
   ['t', 'Tipo de unidad'],
   ['u', 'Uso'],
-  ['a', 'Área construida (m²)', 2],
   ['n', 'Total plantas'],
   ['q', 'Puntaje'],
   ['x', 'Tipo de anexo']
 ];
 
-function abrirFichaConstruccion(pr){
+function abrirFichaConstruccion(f){
+  const pr = f.properties;
   const i = pr.i;
   const fila = S.tabla.filas[i];
   if(!fila) return;
 
   S.seleccion = i;
-  resaltar(i);
-  resaltarLote(i);
-
-  document.getElementById('f-npn').textContent = fila[S.col.npn];
-  const est = S.val(fila, 'estado');
-  const info = ESTADOS[est] || {label:est, color:'#888'};
-  const chip = document.getElementById('f-chip');
-  chip.textContent = info.label;
-  chip.style.background = info.color + '22';
-  chip.style.color = info.color;
-
-  const dl = document.getElementById('f-attr');
-  dl.innerHTML = '';
+  S.selTipo = 'construccion';
+  resaltarSeleccion({tipo:'construccion', i:i, feature:f, conv:pr.c});
 
   const conv = pr.c === 0
     ? {t:'No convencional', c:'#ff5252'}
     : {t:'Convencional',    c:'#4a9eff'};
-  dl.appendChild(seccion('Construcción · ' + conv.t, conv.c));
+  const est = S.val(fila, 'estado');
+  const info = ESTADOS[est] || {label:est, color:'#888'};
 
-  let hay = false;
-  for(const [k, label, dec] of CAMPOS_CONSTR){
-    let v = pr[k];
-    if(v === null || v === undefined || v === '') continue;
-    if(dec !== undefined && typeof v === 'number')
-      v = v.toLocaleString('es-CO', {minimumFractionDigits:dec,
-                                     maximumFractionDigits:dec});
-    const d = document.createElement('div');
-    d.innerHTML = '<dt>' + label + '</dt><dd>' + v + '</dd>';
-    dl.appendChild(d);
-    hay = true;
-  }
-  if(!hay){
-    const d = document.createElement('div');
-    d.innerHTML = '<dt style="flex:1;color:var(--texto-3)">'
-                + 'Sin datos de calificación</dt><dd></dd>';
-    dl.appendChild(d);
+  const destacados = [];
+  if(pr.a != null) destacados.push(['Área m²', fmt(pr.a, 0)]);
+  if(pr.n != null) destacados.push(['Plantas', fmt(pr.n, 0)]);
+  if(pr.q != null) destacados.push(['Puntaje', fmt(pr.q, 0)]);
+
+  const propias = [];
+  for(const [k, label] of CAMPOS_CONSTR){
+    const t = fmt(pr[k]);
+    if(t !== null) propias.push([label, t]);
   }
 
-  dl.appendChild(seccion('Predio', 'var(--texto-2)'));
-  agregarAttr(dl, S.tabla, i, ['npn','estado']);
-  if(S.ficha) agregarAttr(dl, S.ficha, i, ['estado']);
-
-  document.getElementById('ficha').classList.add('abierta');
+  pintarFicha({
+    rotulo:'Construcción' + (pr.d ? ' · ' + pr.d : ''),
+    titulo:fila[S.col.npn],
+    acento:conv.c,
+    chip:{texto:conv.t, color:conv.c},
+    destacados:destacados.slice(0, 3),
+    grupos:[
+      {titulo:'Esta construcción', color:conv.c, filas:propias},
+      {titulo:'Predio · ' + info.label, color:info.color,
+       filas:filasDe(S.tabla, i, ['npn'])
+              .concat(filasDe(S.ficha, i, ['estado'])),
+       abierto:false}
+    ]
+  });
   marcarFilaTabla(i);
 }
 
-function seccion(texto, color){
-  const d = document.createElement('div');
-  d.style.cssText = 'display:block;border:0;padding:11px 0 4px;'
-    + 'font-size:11px;letter-spacing:.03em;text-transform:uppercase;'
-    + 'color:' + color;
-  d.textContent = texto;
-  return d;
+/* ══════════ RESALTADO ══════════
+   Se resalta exactamente lo que se selecciono: si el clic fue en una
+   construccion, solo esa construccion; si fue en el punto del predio,
+   el punto y su lote.                                              */
+
+function resaltarSeleccion(sel){
+  capaResalte.clearLayers();
+  if(!sel) return;
+
+  if(sel.tipo === 'construccion'){
+    const col = sel.conv === 0 ? '#ff5252' : '#4a9eff';
+    L.geoJSON(sel.feature, {pane:'resalte', interactive:false,
+      style:{color:'#ffffff', weight:3.5, opacity:.9,
+             fillColor:col, fillOpacity:.35}}).addTo(capaResalte);
+    L.geoJSON(sel.feature, {pane:'resalte', interactive:false,
+      style:{color:col, weight:1.8, opacity:1, fill:false}}).addTo(capaResalte);
+    return;
+  }
+
+  // predio: el punto y, si esta cargado, su lote
+  const p = S.porFila.get(sel.i);
+  if(p){
+    L.circleMarker([p.y, p.x], {
+      pane:'resalte', radius:11, color:'#4cc2ff', weight:2.5,
+      fillColor:'#4cc2ff', fillOpacity:.2, interactive:false
+    }).addTo(capaResalte);
+  }
+  const P = S.poli.terrenos;
+  if(!P || !map.hasLayer(P.capa)) return;
+  P.capa.eachLayer(l => {
+    if(!l.feature || l.feature.properties.i !== sel.i) return;
+    L.geoJSON(l.feature, {pane:'resalte', interactive:false,
+      style:{color:'#4cc2ff', weight:3, opacity:.95,
+             fillColor:'#4cc2ff', fillOpacity:.16}}).addTo(capaResalte);
+  });
 }
 
 /* ── tabla con scroll virtual ── */
@@ -1486,12 +1598,23 @@ tbody.addEventListener('click', e => {
 
 tbody.addEventListener('mouseover', e => {
   const tr = e.target.closest('tr[data-i]');
-  if(tr) resaltar(+tr.dataset.i);
+  if(tr) previsualizar(+tr.dataset.i);
 });
 tbody.addEventListener('mouseleave', () => {
-  if(S.seleccion !== null) resaltar(S.seleccion);
-  else capaResalte.clearLayers();
+  capaVista.clearLayers();
 });
+
+/* al pasar el mouse por una fila se marca el predio en el mapa,
+   sin tocar la seleccion actual */
+function previsualizar(i){
+  capaVista.clearLayers();
+  const p = S.porFila.get(i);
+  if(!p) return;
+  L.circleMarker([p.y, p.x], {
+    pane:'resalte', radius:10, color:'#ffffff', weight:2,
+    fillColor:'#4cc2ff', fillOpacity:.35, interactive:false
+  }).addTo(capaVista);
+}
 
 function marcarFilaTabla(i){
   const previas = tbody.querySelectorAll('tr.sel');
