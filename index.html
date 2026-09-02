@@ -961,9 +961,11 @@ async function _dibujarPoligonos(){
     if(!map.hasLayer(P.capa)) P.capa.addTo(map);
     if(P.cargando) continue;
 
-    // se pide un area mayor que la pantalla: al panear un poco ya
-    // esta cargado y no hay que volver a pedir
-    const b = map.getBounds().pad(.55);
+    // Margen alrededor de la pantalla: suficiente para que un paneo
+    // corto no dispare otra peticion, pero no tanto como para abarcar
+    // una UIT entera (ahi la libreria deja de leer por rangos y se
+    // trae el archivo completo).
+    const b = map.getBounds().pad(z >= 19 ? .35 : .18);
     if(cubierto(P, b)) continue;
 
     P.cargando = true;
