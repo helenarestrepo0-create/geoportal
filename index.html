@@ -151,22 +151,28 @@ table.tot tr.off{opacity:.3}
 #capas summary:hover{color:var(--texto)}
 .aviso{font-size:11px;color:var(--proceso);line-height:1.5;margin:7px 0 4px}
 
-#ficha{--acento:#4cc2ff;top:12px;right:12px;width:312px;
-       max-height:calc(100vh - var(--gaveta) - 24px);
+/* dos fichas a la derecha: predio arriba, construccion debajo.
+   Comparten estilo; la de construccion se abre solo al pinchar una. */
+#ficha, #ficha-c{--acento:#4cc2ff;right:12px;width:312px;
        padding:0;display:none;overflow:hidden;flex-direction:column}
-#ficha.abierta{display:flex}
-#ficha .cab{
+#ficha{top:12px;max-height:calc(100vh - var(--gaveta) - 24px)}
+#ficha.doble{max-height:calc(50vh - var(--gaveta)/2 - 16px)}
+#ficha-c{top:12px;max-height:calc(100vh - var(--gaveta) - 24px)}
+#ficha-c.bajo{top:auto;bottom:calc(var(--gaveta) + 12px);
+              max-height:calc(50vh - var(--gaveta)/2 - 16px)}
+#ficha.abierta, #ficha-c.abierta{display:flex}
+#ficha .cab, #ficha-c .cab{
   padding:11px 14px 11px;border-bottom:1px solid var(--linea);
   display:flex;align-items:flex-start;gap:10px;flex:none;
   border-left:3px solid var(--acento);
 }
-#ficha .rotulo{font-size:10.5px;color:var(--texto-3);letter-spacing:.04em;
+#ficha .rotulo, #ficha-c .rotulo{font-size:10.5px;color:var(--texto-3);letter-spacing:.04em;
                text-transform:uppercase;margin-bottom:2px}
-#ficha .npn{font-size:12.5px;word-break:break-all;line-height:1.35}
-#ficha .cerrar{margin-left:auto;background:none;border:0;color:var(--texto-2);
+#ficha .npn, #ficha-c .npn{font-size:12.5px;word-break:break-all;line-height:1.35}
+#ficha .cerrar, #ficha-c .cerrar{margin-left:auto;background:none;border:0;color:var(--texto-2);
                font-size:19px;line-height:1;cursor:pointer;padding:0 2px}
-#ficha .cerrar:hover{color:#fff}
-#ficha .cuerpo{padding:0 0 12px;overflow-y:auto}
+#ficha .cerrar:hover, #ficha-c .cerrar:hover{color:#fff}
+#ficha .cuerpo, #ficha-c .cuerpo{padding:0 0 12px;overflow-y:auto}
 
 .chip{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;
       font-weight:600}
@@ -281,8 +287,11 @@ dl.attr dd.dato{font-weight:500}
 
 @media (max-width:820px){
   .cajon{left:56px;right:12px;width:auto}
-  #ficha{top:auto;bottom:calc(var(--gaveta) + 12px);left:12px;right:12px;
-         width:auto;max-height:46vh}
+  #ficha, #ficha-c{left:12px;right:12px;width:auto}
+  #ficha{top:auto;bottom:calc(var(--gaveta) + 12px);max-height:46vh}
+  #ficha.doble{max-height:30vh}
+  #ficha-c{top:12px;max-height:30vh}
+  #ficha-c.bajo{top:12px;bottom:auto;max-height:30vh}
   #estado{display:none}
   #gaveta.abierta{height:230px}
 }
@@ -369,6 +378,17 @@ dl.attr dd.dato{font-weight:500}
     <button class="cerrar" id="f-cerrar" aria-label="Cerrar ficha">×</button>
   </div>
   <div class="cuerpo" id="f-cuerpo"></div>
+</div>
+
+<div class="panel" id="ficha-c">
+  <div class="cab">
+    <div style="min-width:0">
+      <div class="rotulo" id="fc-rotulo">Construcción</div>
+      <div class="npn mono" id="fc-npn"></div>
+    </div>
+    <button class="cerrar" id="fc-cerrar" aria-label="Cerrar">×</button>
+  </div>
+  <div class="cuerpo" id="fc-cuerpo"></div>
 </div>
 
 <div id="gaveta">
@@ -919,7 +939,7 @@ map.on('click', e => {
 
   // 2) si no, se mira si el clic cayo dentro de una construccion
   const c = construccionEn(e.latlng);
-  if(c) return abrirFichaConstruccion(c.properties);
+  if(c) return abrirFichaConstruccion(c);
 });
 
 /* ¿Que construccion contiene este punto?
@@ -1255,13 +1275,15 @@ function fechaCorte(c){
    La cabecera lleva el color de lo seleccionado, para que se sepa sin
    leer si se hizo clic en un predio o en una construccion.          */
 
-function pintarFicha({rotulo, titulo, acento, chip, destacados, grupos}){
-  const f = document.getElementById('ficha');
+function pintarFicha({rotulo, titulo, acento, chip, destacados, grupos},
+                    destino){
+  const pre = destino === 'c' ? 'fc' : 'f';
+  const f = document.getElementById(destino === 'c' ? 'ficha-c' : 'ficha');
   f.style.setProperty('--acento', acento);
-  document.getElementById('f-rotulo').textContent = rotulo;
-  document.getElementById('f-npn').textContent = titulo;
+  document.getElementById(pre + '-rotulo').textContent = rotulo;
+  document.getElementById(pre + '-npn').textContent = titulo;
 
-  const c = document.getElementById('f-cuerpo');
+  const c = document.getElementById(pre + '-cuerpo');
   c.innerHTML = '';
 
   if(chip){
@@ -1343,12 +1365,15 @@ function valorDe(fuente, i, key){
   return v;
 }
 
-function abrirFicha(i){
+function abrirFicha(i, desdeConstruccion){
   const fila = S.tabla.filas[i];
   if(!fila) return;
   S.seleccion = i;
-  S.selTipo = 'predio';
-  resaltarSeleccion({tipo:'predio', i:i});
+  if(!desdeConstruccion){
+    S.selTipo = 'predio';
+    resaltarSeleccion({tipo:'predio', i:i});
+    document.getElementById('ficha-c').classList.remove('abierta');
+  }
 
   const est = S.val(fila, 'estado');
   const info = ESTADOS[est] || {label:est, color:'#888'};
@@ -1378,12 +1403,15 @@ function abrirFicha(i){
        filas:filasDe(S.ficha, i, ['manzana','direccion','area_terr',
                                   'area_const','n_unid','estado'])}
     ]
-  });
+  }, 'f');
+  acomodarFichas();
   marcarFilaTabla(i);
 }
 
 function cerrarFicha(){
   document.getElementById('ficha').classList.remove('abierta');
+  document.getElementById('ficha-c').classList.remove('abierta');
+  acomodarFichas();
   capaResalte.clearLayers();
   S.seleccion = null;
   S.selTipo = null;
@@ -1394,6 +1422,8 @@ document.getElementById('f-cerrar').onclick = cerrarFicha;
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape') return;
   if(cajaSug.classList.contains('abierto')) cerrarSug();
+  else if(document.getElementById('ficha-c').classList.contains('abierta'))
+    cerrarFichaConstruccion();
   else if(S.seleccion !== null) cerrarFicha();
   else if(document.getElementById('gaveta').classList.contains('abierta'))
     cerrarGaveta();
@@ -1420,15 +1450,9 @@ function abrirFichaConstruccion(f){
   const fila = S.tabla.filas[i];
   if(!fila) return;
 
-  S.seleccion = i;
-  S.selTipo = 'construccion';
-  resaltarSeleccion({tipo:'construccion', i:i, feature:f, conv:pr.c});
-
   const conv = pr.c === 0
     ? {t:'No convencional', c:'#ff5252'}
     : {t:'Convencional',    c:'#4a9eff'};
-  const est = S.val(fila, 'estado');
-  const info = ESTADOS[est] || {label:est, color:'#888'};
 
   const destacados = [];
   if(pr.a != null) destacados.push(['Área m²', fmt(pr.a, 0)]);
@@ -1447,16 +1471,34 @@ function abrirFichaConstruccion(f){
     acento:conv.c,
     chip:{texto:conv.t, color:conv.c},
     destacados:destacados.slice(0, 3),
-    grupos:[
-      {titulo:'Esta construcción', color:conv.c, filas:propias},
-      {titulo:'Predio · ' + info.label, color:info.color,
-       filas:filasDe(S.tabla, i, ['npn'])
-              .concat(filasDe(S.ficha, i, ['estado'])),
-       abierto:false}
-    ]
-  });
-  marcarFilaTabla(i);
+    grupos:[{titulo:'Datos de la construcción', color:conv.c, filas:propias}]
+  }, 'c');
+
+  // el predio se abre en su propio panel: los dos se ven a la vez
+  abrirFicha(i, true);
+  S.selTipo = 'construccion';
+  resaltarSeleccion({tipo:'construccion', i:i, feature:f, conv:pr.c});
+  acomodarFichas();
 }
+
+/* con las dos fichas abiertas se reparten la altura */
+function acomodarFichas(){
+  const a = document.getElementById('ficha');
+  const b = document.getElementById('ficha-c');
+  const dos = a.classList.contains('abierta') && b.classList.contains('abierta');
+  a.classList.toggle('doble', dos);
+  b.classList.toggle('bajo', dos);
+}
+
+function cerrarFichaConstruccion(){
+  document.getElementById('ficha-c').classList.remove('abierta');
+  acomodarFichas();
+  if(S.selTipo === 'construccion' && S.seleccion !== null){
+    S.selTipo = 'predio';
+    resaltarSeleccion({tipo:'predio', i:S.seleccion});
+  }
+}
+document.getElementById('fc-cerrar').onclick = cerrarFichaConstruccion;
 
 /* ══════════ RESALTADO ══════════
    Se resalta exactamente lo que se selecciono: si el clic fue en una
@@ -1778,15 +1820,21 @@ function volarAZona(tipo, valor){
   const ref = S.zonas[tipo];
   if(!ref || !valor) return;
 
-  let caja = null;
+  // Un mismo nombre puede estar en varios poligonos, a veces en zonas
+  // separadas de la ciudad. Encuadrar la union daria una vista que
+  // abarca todo y parece un salto al centro: se vuela al poligono mas
+  // grande, que es el principal, aunque se resalten todos.
+  let mejor = null, mayor = -1;
   ref.capa.eachLayer(l => {
     if(String(l.feature.properties[ref.campo]) !== valor) return;
     l.setStyle({weight:ref.est.weight + 2, opacity:1, fillOpacity:.14,
                 color:'#4cc2ff'});
     l.bringToFront();
-    caja = caja ? caja.extend(l.getBounds()) : l.getBounds();
+    const b = l.getBounds();
+    const a = (b.getEast() - b.getWest()) * (b.getNorth() - b.getSouth());
+    if(a > mayor){ mayor = a; mejor = b; }
   });
-  if(caja) encuadrar(caja);
+  if(mejor) encuadrar(mejor);
 }
 
 /* Encuadra una zona dejándola visible entre los paneles.
