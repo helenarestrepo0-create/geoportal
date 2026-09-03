@@ -1,11 +1,11 @@
 {
- "corte": "20260902",
+ "corte": "20260903",
  "opcionales": [
   {
    "id": "comision_terreno",
    "archivo": "comision_terreno.geojson",
    "tipo": "geojson",
-   "n": 6480,
+   "n": 6492,
    "label": "Comision terreno",
    "color": "#e53935",
    "desc": "Poligono de terreno cuyo NPN no existe en la base"
@@ -14,7 +14,7 @@
    "id": "comision_construccion",
    "archivo": "comision_construccion.geojson",
    "tipo": "geojson",
-   "n": 11831,
+   "n": 11844,
    "label": "Comision construccion",
    "color": "#fb8c00",
    "desc": "Poligono de construccion cuyo NPN no existe en la base"
@@ -23,7 +23,7 @@
    "id": "omision_terreno",
    "archivo": "omision_terreno.json",
    "tipo": "lista",
-   "n": 4228,
+   "n": 4259,
    "label": "Omision terreno",
    "color": "#8e24aa",
    "desc": "Predio sin poligono de terreno"
@@ -32,7 +32,7 @@
    "id": "omision_construccion",
    "archivo": "omision_construccion.json",
    "tipo": "lista",
-   "n": 9450,
+   "n": 9501,
    "label": "Omision construccion",
    "color": "#3949ab",
    "desc": "Predio con caracteristicas pero sin poligono"
