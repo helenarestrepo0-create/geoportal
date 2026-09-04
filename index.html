@@ -441,7 +441,7 @@ const CFG = {
   orto:'https://xyz1.falconprecision.co/valledupar-urbano/Z{z}/{y}/{x}.png',
   centro:[10.4631,-73.2532], zoom:14,
   limites:[[10.38,-73.32],[10.55,-73.18]],
-  zoomPuntos:17,        // aparecen junto con los terrenos
+  zoomPuntos:15,        // ~500 m de escala
   filaAlto:26
 };
 
@@ -1902,26 +1902,42 @@ function volarAZona(tipo, valor){
   if(mejor) encuadrar(mejor);
 }
 
-/* Encuadra una zona dejándola visible entre los paneles.
-   Los paneles flotan sobre el mapa, así que el centro geométrico
-   no es el centro visible: el padding se calcula por lado. */
+/* Encuadra una zona dejandola visible entre los paneles.
+
+   El salto al final del vuelo lo causaba maxBounds: cuando el destino
+   queda cerca del borde permitido, Leaflet corrige la posicion al
+   terminar. Se suelta durante la animacion y se restaura despues.
+
+   El padding va por lado porque los paneles flotan sobre el mapa: el
+   centro geometrico no coincide con el centro visible.              */
 function encuadrar(caja){
-  // el padding se calcula con lo que hay abierto en ese momento
-  const izq = 56 + (S.cajon ? 300 : 0);
-  const anchoPanelIzq = Math.min(izq, window.innerWidth * .45);
-  const anchoPanelDer = document.getElementById('ficha')
-                          .classList.contains('abierta') ? 330 : 40;
-  const alturaGaveta = document.getElementById('gaveta')
-                         .classList.contains('abierta') ? 60 : 40;
+  const izq = 56 + (S.cajon ? 302 : 0);
+  const der = 56 + (document.getElementById('ficha')
+                      .classList.contains('abierta') ? 324 : 0);
+  const abajo = document.getElementById('gaveta')
+                  .classList.contains('abierta') ? 60 : 46;
+
+  // si los paneles dejan menos de un tercio libre se recorta el margen:
+  // un padding mayor que la pantalla hace fallar el ajuste
+  const libre = window.innerWidth - izq - der;
+  const k = libre < window.innerWidth * .33 ? .35 : 1;
 
   S.volando = true;
+  map.setMaxBounds(null);
+
   map.flyToBounds(caja, {
-    paddingTopLeft:     [anchoPanelIzq, 40],
-    paddingBottomRight: [anchoPanelDer, alturaGaveta],
+    paddingTopLeft:     [izq * k, 46],
+    paddingBottomRight: [der * k, abajo],
     duration: .85,
     easeLinearity: .25
   });
 }
+
+// restaurar el limite de paneo cuando el vuelo termina
+map.on('moveend', () => {
+  if(map.options.maxBounds) return;
+  setTimeout(() => map.setMaxBounds(CFG.limites), 80);
+});
 
 function quitarZona(){
   for(const t in S.zonas){
