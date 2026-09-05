@@ -1,6 +1,6 @@
 {
  "corte": "20260904",
- "generado": "2026-09-04T10:05:07",
+ "generado": "2026-09-04T19:27:50",
  "total": 129861,
  "estados": {
   "EN_PROCESO": 81562,
@@ -299,6 +299,12 @@
    }
   }
  },
+ "aoi": [
+  -73.306189,
+  10.411423,
+  -73.201025,
+  10.514986
+ ],
  "opcionales": [
   "comision_terreno",
   "comision_construccion",

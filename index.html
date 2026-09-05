@@ -117,6 +117,27 @@ table.tot tr.off{opacity:.3}
 .campo select:hover,.campo input:hover{border-color:var(--linea-2)}
 .campo select:focus,.campo input:focus{border-color:var(--foco);outline:none}
 .campo input::placeholder{color:var(--texto-3)}
+.lista-sel{
+  border:1px solid var(--linea);border-radius:4px;background:#0a1016;
+  max-height:118px;overflow-y:auto;margin-top:2px;
+}
+.lista-sel.alta{max-height:150px}
+.lista-sel::-webkit-scrollbar{width:8px}
+.lista-sel::-webkit-scrollbar-thumb{background:var(--linea-2);border-radius:4px}
+.opc{
+  display:flex;align-items:center;gap:8px;padding:4px 9px;
+  font-size:12px;cursor:pointer;user-select:none;transition:.1s;
+}
+.opc:hover{background:rgba(76,194,255,.07)}
+.opc input{accent-color:var(--foco);margin:0;cursor:pointer;flex:none}
+.opc .txt{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opc .n{color:var(--texto-3);font-size:10.5px;
+        font-variant-numeric:tabular-nums}
+.opc.vacia{opacity:.35;pointer-events:none}
+.pista{color:var(--texto-3);font-size:10px;text-transform:none;
+       letter-spacing:0}
+#q-barrio{margin-bottom:2px}
+
 #buscar-wrap{position:relative}
 #sugerencias{
   position:absolute;top:100%;left:0;right:0;z-index:20;margin-top:3px;
@@ -337,6 +358,12 @@ dl.attr dd.dato{font-weight:500}
     <svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>
   </button>
   <div class="sep"></div>
+  <button id="b-aoi" data-tip="Ir al área del proyecto"
+          aria-label="Área del proyecto">
+    <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/>
+      <circle cx="12" cy="10" r="2.5"/></svg>
+  </button>
+  <div class="sep"></div>
   <button id="b-tabla" data-tip="Tabla de predios" aria-label="Tabla">
     <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/>
       <path d="M3 10h18M9 10v10"/></svg>
@@ -365,12 +392,18 @@ dl.attr dd.dato{font-weight:500}
     <div id="sugerencias"></div>
   </div>
   <div class="campo">
-    <label for="f-uit">Unidad de intervención</label>
-    <select id="f-uit"><option value="">Todas</option></select>
+    <label>Unidad de intervención</label>
+    <div class="lista-sel" id="f-uit"></div>
   </div>
   <div class="campo">
-    <label for="f-barrio">Barrio</label>
-    <select id="f-barrio"><option value="">Todos</option></select>
+    <label>Barrio <span class="pista" id="pista-barrio"></span></label>
+    <input id="q-barrio" type="search" placeholder="filtrar lista"
+           autocomplete="off">
+    <div class="lista-sel alta" id="f-barrio"></div>
+  </div>
+  <div class="campo">
+    <label>Entrega</label>
+    <div class="lista-sel" id="f-entrega"></div>
   </div>
   <div class="chips" id="chips"></div>
   <div id="resultado"></div>
@@ -477,19 +510,22 @@ const S = {
   puntos:[], indice:null,
   porFila:new Map(), col:{}, val:null,
   idx:{},
-  filtros:{uit:'', barrio:'', manzana:''},
+  filtros:{uit:new Set(), barrio:new Set(), entrega:new Set(), manzana:''},
   ocultos:new Set(),
   visibles:null,
   seleccion:null, hover:null,
   ambito:'todos',
   orden:{campo:'npn', asc:true},
-  zonas:{}, poli:{}, volando:false, selTipo:null, ultimaConstr:null
+  zonas:{}, poli:{}, volando:false, selTipo:null,
+  ultimaConstr:null, aoi:null
 };
 
 /* ── mapa ── */
+// Sin maxBounds: nada empuja el mapa de vuelta, que era lo que hacia
+// saltar el encuadre al terminar un vuelo. Para volver al area del
+// proyecto esta el boton AOI.
 const map = L.map('mapa',{
-  center:CFG.centro, zoom:CFG.zoom, minZoom:12, maxZoom:22,
-  maxBounds:CFG.limites, maxBoundsViscosity:.9,
+  center:CFG.centro, zoom:CFG.zoom, minZoom:9, maxZoom:22,
   preferCanvas:true, zoomControl:false
 });
 L.control.zoom({position:'bottomright'}).addTo(map);
@@ -556,6 +592,18 @@ function abrirCajon(id){
 document.querySelectorAll('#barra button[data-cajon]').forEach(b =>
   b.onclick = () => abrirCajon(b.dataset.cajon));
 
+document.getElementById('b-aoi').onclick = irAlAoi;
+
+/* ══════════ AREA DE INTERES ══════════
+   El contorno real de la ortofoto, extraido de sus teselas. Marca hasta
+   donde hay informacion: el mapa arranca ahi y el boton devuelve.     */
+
+function irAlAoi(){
+  const c = S.aoi;
+  if(!c) return;
+  encuadrar(L.latLngBounds([[c[1], c[0]], [c[3], c[2]]]));
+}
+
 /* ── carga ── */
 const detalle = t => {
   const d = document.getElementById('carga-detalle');
@@ -595,6 +643,14 @@ async function arrancar(){
     pintarEncabezadoTabla();
     aplicarFiltros();
     dibujarPoligonos();
+
+    // el mapa arranca encuadrado en el area con informacion
+    S.aoi = S.resumen.aoi || null;
+    if(S.aoi){
+      map.fitBounds(L.latLngBounds([[S.aoi[1], S.aoi[0]],
+                                    [S.aoi[3], S.aoi[2]]]),
+                    {padding:[40, 40], animate:false});
+    }
 
     document.getElementById('carga').style.display = 'none';
     abrirCajon('cabecera');
@@ -646,7 +702,7 @@ function construirIndices(geo){
 }
 
 /* ── filtros ── */
-function interseccion(a,b){
+function interseccion(a, b){
   const ch = a.size < b.size ? a : b;
   const gr = ch === a ? b : a;
   const r = new Set();
@@ -654,18 +710,47 @@ function interseccion(a,b){
   return r;
 }
 
+function union(sets){
+  const r = new Set();
+  for(const s of sets) for(const v of s) r.add(v);
+  return r;
+}
+
+/* ══════════ FILTROS ══════════
+
+   Cada filtro guarda un conjunto de valores elegidos. Dentro de un
+   filtro los valores se suman (UIT 1 O UIT 3); entre filtros se cruzan
+   (UIT 1 Y barrio X).
+
+   Los indices invertidos se construyen una vez al cargar, asi que
+   filtrar es intersecar conjuntos: no se recorren las 130 mil filas.  */
+
 function aplicarFiltros(){
   const f = S.filtros;
   let res = null;
-  const cruzar = c => { res = res === null ? c : interseccion(res,c); };
+  const cruzar = c => { res = res === null ? c : interseccion(res, c); };
 
-  if(f.uit && S.idx.uit && S.idx.uit.has(f.uit)) cruzar(S.idx.uit.get(f.uit));
-  if(f.barrio && S.idx.barrio && S.idx.barrio.has(f.barrio))
-    cruzar(S.idx.barrio.get(f.barrio));
+  for(const k of ['uit', 'barrio']){
+    if(!f[k].size || !S.idx[k]) continue;
+    const partes = [];
+    for(const v of f[k]) if(S.idx[k].has(v)) partes.push(S.idx[k].get(v));
+    cruzar(partes.length ? union(partes) : new Set());
+  }
+
+  if(f.entrega.size){
+    const s = new Set();
+    const iE = S.col.entrega, iEst = S.col.estado;
+    S.tabla.filas.forEach((fila, i) => {
+      const e = fila[iE];
+      const clave = e === 1 ? '1' : (e === 2 ? '2' : '0');
+      if(f.entrega.has(clave)) s.add(i);
+    });
+    cruzar(s);
+  }
 
   if(f.manzana){
     const s = new Set(), iN = S.col.npn;
-    S.tabla.filas.forEach((fila,i) => {
+    S.tabla.filas.forEach((fila, i) => {
       if(String(fila[iN]).startsWith(f.manzana)) s.add(i);
     });
     cruzar(s);
@@ -673,62 +758,169 @@ function aplicarFiltros(){
 
   S.visibles = res;
   pintarChips();
+  actualizarListas();
   actualizarResumenFiltrado();
   redibujar();
   pintarTabla();
+  resaltarZonasFiltradas();
 }
 
 const enFiltro = i => S.visibles === null || S.visibles.has(i);
 
-function pintarFiltros(){
-  const llenar = (id, lista) => {
-    const sel = document.getElementById(id);
-    for(const v of (lista || [])){
-      const o = document.createElement('option');
-      o.value = v; o.textContent = v;
-      sel.appendChild(o);
-    }
-  };
-  llenar('f-uit', S.dominios.uit);
-  llenar('f-barrio', S.dominios.barrio);
+/* Construye una lista de casillas. El conteo de cada opcion se
+   recalcula con los demas filtros aplicados: asi se ve cuantos
+   predios quedarian antes de marcarla. */
+function pintarLista(id, clave, valores, etiquetas){
+  const cont = document.getElementById(id);
+  cont.innerHTML = '';
 
-  document.getElementById('f-uit').onchange = e => {
-    S.filtros.uit = e.target.value;
-    aplicarFiltros();
-    e.target.value ? volarAZona('uit', e.target.value) : quitarZona();
+  for(const v of valores){
+    const marcado = S.filtros[clave].has(v);
+    const el = document.createElement('label');
+    el.className = 'opc';
+    el.dataset.v = v;
+    el.innerHTML = '<input type="checkbox"' + (marcado ? ' checked' : '') + '>'
+      + '<span class="txt">' + (etiquetas ? etiquetas[v] : v) + '</span>'
+      + '<span class="n"></span>';
+    el.querySelector('input').onchange = e => {
+      e.target.checked ? S.filtros[clave].add(v) : S.filtros[clave].delete(v);
+      aplicarFiltros();
+    };
+    cont.appendChild(el);
+  }
+}
+
+/* Cuenta cuantos predios quedarian si se marcara cada opcion, con el
+   resto de filtros activos. Las que no aportan nada se atenuan: es el
+   comportamiento en cascada. */
+function actualizarListas(){
+  const f = S.filtros;
+
+  const sinEste = clave => {
+    let res = null;
+    const cruzar = c => { res = res === null ? c : interseccion(res, c); };
+    for(const k of ['uit', 'barrio']){
+      if(k === clave || !f[k].size || !S.idx[k]) continue;
+      const partes = [];
+      for(const v of f[k]) if(S.idx[k].has(v)) partes.push(S.idx[k].get(v));
+      cruzar(partes.length ? union(partes) : new Set());
+    }
+    return res;
   };
-  document.getElementById('f-barrio').onchange = e => {
-    S.filtros.barrio = e.target.value;
-    aplicarFiltros();
-    e.target.value ? volarAZona('barrio', e.target.value) : quitarZona();
+
+  for(const clave of ['uit', 'barrio']){
+    const base = sinEste(clave);
+    const cont = document.getElementById('f-' + clave);
+    for(const el of cont.children){
+      const v = el.dataset.v;
+      const s = S.idx[clave] ? S.idx[clave].get(v) : null;
+      let n = 0;
+      if(s) n = base === null ? s.size : interseccion(s, base).size;
+      el.querySelector('.n').textContent = n ? nf(n) : '';
+      el.classList.toggle('vacia', n === 0 && !f[clave].has(v));
+    }
+  }
+
+  const p = document.getElementById('pista-barrio');
+  const visibles = [...document.getElementById('f-barrio').children]
+                     .filter(e => !e.classList.contains('vacia')).length;
+  p.textContent = f.uit.size ? '(' + visibles + ' en la selección)' : '';
+}
+
+function pintarFiltros(){
+  pintarLista('f-uit', 'uit', S.dominios.uit || []);
+  pintarLista('f-barrio', 'barrio', S.dominios.barrio || []);
+  pintarLista('f-entrega', 'entrega', ['1', '2', '0'],
+              {'1':'Primera entrega', '2':'Segunda entrega',
+               '0':'Sin entregar'});
+
+  // buscador dentro de la lista de barrios: son varios cientos
+  document.getElementById('q-barrio').oninput = e => {
+    const q = e.target.value.trim().toUpperCase();
+    for(const el of document.getElementById('f-barrio').children){
+      el.style.display = (!q || el.dataset.v.toUpperCase().includes(q))
+                         ? '' : 'none';
+    }
   };
 }
 
 function pintarChips(){
   const c = document.getElementById('chips');
   c.innerHTML = '';
-  const activos = [
-    ['uit','Unidad',S.filtros.uit],
-    ['barrio','Barrio',S.filtros.barrio],
-    ['manzana','Manzana',S.filtros.manzana]
-  ].filter(x => x[2]);
+  const f = S.filtros;
 
-  for(const par of activos){
-    const k = par[0], label = par[1], v = par[2];
+  const quitar = (clave, v) => {
+    if(v === null) f[clave] = '';
+    else f[clave].delete(v);
+    const cont = document.getElementById('f-' + clave);
+    if(cont){
+      for(const el of cont.children){
+        if(el.dataset.v === v) el.querySelector('input').checked = false;
+      }
+    }
+    if(clave === 'manzana') document.getElementById('q').value = '';
+    aplicarFiltros();
+  };
+
+  const ETQ = {'1':'Primera', '2':'Segunda', '0':'Sin entregar'};
+  const chip = (texto, alQuitar) => {
     const el = document.createElement('span');
     el.className = 'chip-f';
-    el.innerHTML = '<span>' + label + ': <b>' + v + '</b></span>'
+    el.innerHTML = '<span>' + texto + '</span>'
                  + '<button aria-label="Quitar filtro">×</button>';
-    el.querySelector('button').onclick = () => {
-      S.filtros[k] = '';
-      const sel = document.getElementById('f-' + k);
-      if(sel) sel.value = '';
-      if(k === 'manzana') document.getElementById('q').value = '';
-      quitarZona();
-      aplicarFiltros();
-    };
+    el.querySelector('button').onclick = alQuitar;
+    c.appendChild(el);
+  };
+
+  for(const v of f.uit)     chip('<b>' + v + '</b>', () => quitar('uit', v));
+  for(const v of f.barrio)  chip('<b>' + v + '</b>', () => quitar('barrio', v));
+  for(const v of f.entrega) chip(ETQ[v], () => quitar('entrega', v));
+  if(f.manzana) chip('Manzana <b>' + f.manzana + '</b>',
+                     () => quitar('manzana', null));
+
+  if(f.uit.size || f.barrio.size || f.entrega.size || f.manzana){
+    const el = document.createElement('button');
+    el.className = 'btn';
+    el.style.cssText = 'padding:2px 9px;font-size:11px';
+    el.textContent = 'Limpiar';
+    el.onclick = limpiarFiltros;
     c.appendChild(el);
   }
+}
+
+function limpiarFiltros(){
+  S.filtros.uit.clear();
+  S.filtros.barrio.clear();
+  S.filtros.entrega.clear();
+  S.filtros.manzana = '';
+  document.getElementById('q').value = '';
+  for(const id of ['f-uit', 'f-barrio', 'f-entrega']){
+    for(const el of document.getElementById(id).children){
+      el.querySelector('input').checked = false;
+    }
+  }
+  quitarZona();
+  aplicarFiltros();
+}
+
+/* resalta en el mapa los poligonos de las zonas filtradas */
+function resaltarZonasFiltradas(){
+  quitarZona();
+  let caja = null;
+  for(const tipo of ['uit', 'barrio']){
+    const ref = S.zonas[tipo];
+    if(!ref || !S.filtros[tipo].size) continue;
+    ref.capa.eachLayer(l => {
+      const v = String(l.feature.properties[ref.campo]);
+      if(!S.filtros[tipo].has(v)) return;
+      l.setStyle({weight:ref.est.weight + 2, opacity:1,
+                  fillOpacity:.14, color:'#4cc2ff'});
+      l.bringToFront();
+      const b = l.getBounds();
+      caja = caja ? caja.extend(b) : b;
+    });
+  }
+  return caja;
 }
 
 function actualizarResumenFiltrado(){
@@ -741,22 +933,46 @@ function actualizarResumenFiltrado(){
       + 'Todo el municipio</div>';
     return;
   }
-  const cuenta = {};
+
+  const cuenta = {}, etapas = {};
   for(const i of S.visibles){
-    const e = S.val(S.tabla.filas[i],'estado');
-    cuenta[e] = (cuenta[e]||0) + 1;
+    const fila = S.tabla.filas[i];
+    const e = S.val(fila, 'estado');
+    cuenta[e] = (cuenta[e] || 0) + 1;
+    const et = S.val(fila, 'etapa');
+    if(et) etapas[et] = (etapas[et] || 0) + 1;
   }
   const total = S.visibles.size;
-  const ent = cuenta.ENTREGADO || 0;
-  const listo = cuenta.LISTO || 0;
-  div.innerHTML =
-    '<div><span class="grande mono">' + nf(total) + '</span> predios en la selección</div>'
-    + '<div style="margin-top:5px">Entregados <b class="mono">' + nf(ent)
-    + '</b> · <b style="color:var(--entregado)">'
-    + pf(total ? ent/total*100 : 0) + ' %</b></div>'
-    + '<div>Listos <b class="mono">' + nf(listo)
-    + '</b> · <b style="color:var(--listo)">'
-    + pf(total ? listo/total*100 : 0) + ' %</b></div>';
+  const pc = n => pf(total ? n / total * 100 : 0);
+
+  let h = '<div><span class="grande mono">' + nf(total)
+        + '</span> predios en la selección</div>';
+
+  h += '<table class="tot" style="margin-top:7px"><tbody>';
+  for(const k in ESTADOS){
+    const n = cuenta[k];
+    if(!n) continue;
+    h += '<tr><td><span class="marca" style="background:' + ESTADOS[k].color
+       + '"></span>' + ESTADOS[k].label + '</td>'
+       + '<td class="mono">' + nf(n) + '</td>'
+       + '<td class="mono" style="color:var(--texto-3);padding-left:8px">'
+       + pc(n) + '%</td></tr>';
+  }
+  h += '</tbody></table>';
+
+  const orden = ['juridico', 'reconocimiento', 'geografico'];
+  const hay = orden.filter(k => etapas[k]);
+  if(hay.length){
+    h += '<div style="margin-top:8px;padding-top:7px;'
+       + 'border-top:1px solid var(--linea);font-size:11px;'
+       + 'color:var(--texto-3)">En proceso por etapa</div>';
+    for(const k of hay){
+      h += '<div style="display:flex;justify-content:space-between">'
+         + '<span>' + ETAPAS[k] + '</span>'
+         + '<b class="mono">' + nf(etapas[k]) + '</b></div>';
+    }
+  }
+  div.innerHTML = h;
 }
 
 /* ── búsqueda ── */
@@ -846,9 +1062,13 @@ function elegirSug(s){
     if(p) map.flyTo([p.y,p.x], 19, {duration:.7});
   }else{
     cajaQ.value = '';
-    S.filtros[s.t] = s.v;
-    const sel = document.getElementById('f-' + s.t);
-    if(sel) sel.value = s.v;
+    S.filtros[s.t].add(s.v);
+    const cont = document.getElementById('f-' + s.t);
+    if(cont){
+      for(const el of cont.children){
+        if(el.dataset.v === s.v) el.querySelector('input').checked = true;
+      }
+    }
     aplicarFiltros();
     volarAZona(s.t, s.v);
   }
@@ -1836,6 +2056,8 @@ function pintarCapas(){
 }
 
 const EST_ZONA = {
+  // el AOI va sin relleno: marca el limite sin tapar la ortofoto
+  aoi:      {color:'#7dd3fc', weight:1.6, opacity:.55, fillOpacity:0},
   perimetro:{color:'#ffffff', weight:3,   opacity:.95, fillOpacity:0,
              dashArray:'9,6', halo:'#080d12'},
   uit:      {color:'#4cc2ff', weight:2.4, opacity:.9,  fillOpacity:.05},
@@ -1845,6 +2067,8 @@ const EST_ZONA = {
 async function cargarZonas(){
   const cont = document.getElementById('lista-capas');
   const defs = [
+    {a:'contexto/aoi.geojson', l:'Área con ortofoto', k:'aoi',
+     campo:'nombre', on:true},
     {a:'contexto/perimetro.geojson', l:'Perímetro urbano', k:'perimetro',
      campo:'Nombre', on:true, halo:true},
     {a:'contexto/uit.geojson', l:'Unidades de intervención', k:'uit',
@@ -1878,19 +2102,25 @@ async function cargarZonas(){
         l.on('mouseover', () => l.setStyle({weight:est.weight + 1.4,
                                             fillOpacity:.16, opacity:1}));
         l.on('mouseout', () => {
-          if(S.filtros[d.filtro] === String(nombre)) return;
+          if(S.filtros[d.filtro].has(String(nombre))) return;
           l.setStyle({weight:est.weight, fillOpacity:est.fillOpacity,
                       opacity:est.opacity, color:est.color});
         });
         l.on('contextmenu', ev => {
           L.DomEvent.stop(ev);
           const val = String(nombre);
-          const nuevo = S.filtros[d.filtro] === val ? '' : val;
-          S.filtros[d.filtro] = nuevo;
-          const sel = document.getElementById('f-' + d.filtro);
-          if(sel) sel.value = nuevo;
+          const set = S.filtros[d.filtro];
+          const activar = !set.has(val);
+          activar ? set.add(val) : set.delete(val);
+
+          const cont = document.getElementById('f-' + d.filtro);
+          if(cont){
+            for(const el of cont.children){
+              if(el.dataset.v === val) el.querySelector('input').checked = activar;
+            }
+          }
           aplicarFiltros();
-          if(nuevo) volarAZona(d.filtro, nuevo); else quitarZona();
+          if(activar) volarAZona(d.filtro, val);
         });
       }
     });
@@ -1927,16 +2157,13 @@ function volarAZona(tipo, valor){
 
 /* Encuadra una zona dejandola visible entre los paneles.
 
-   El salto al final del vuelo lo causaba maxBounds: cuando el destino
-   queda cerca del borde permitido, Leaflet corrige la posicion al
-   terminar. Se suelta durante la animacion y se restaura despues.
-
    El padding va por lado porque los paneles flotan sobre el mapa: el
    centro geometrico no coincide con el centro visible.              */
 function encuadrar(caja){
   const izq = 56 + (S.cajon ? 302 : 0);
   const der = 56 + (document.getElementById('ficha')
                       .classList.contains('abierta') ? 324 : 0);
+  if(!caja) return;
   const abajo = document.getElementById('gaveta')
                   .classList.contains('abierta') ? 60 : 46;
 
@@ -1946,8 +2173,6 @@ function encuadrar(caja){
   const k = libre < window.innerWidth * .33 ? .35 : 1;
 
   S.volando = true;
-  map.setMaxBounds(null);
-
   map.flyToBounds(caja, {
     paddingTopLeft:     [izq * k, 46],
     paddingBottomRight: [der * k, abajo],
@@ -1956,11 +2181,7 @@ function encuadrar(caja){
   });
 }
 
-// restaurar el limite de paneo cuando el vuelo termina
-map.on('moveend', () => {
-  if(map.options.maxBounds) return;
-  setTimeout(() => map.setMaxBounds(CFG.limites), 80);
-});
+
 
 function quitarZona(){
   for(const t in S.zonas){
