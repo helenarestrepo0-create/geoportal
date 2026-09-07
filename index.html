@@ -110,33 +110,62 @@ table.tot tr.off{opacity:.3}
 #filtros .titulo{font-size:11px;color:var(--texto-2);margin-bottom:10px}
 .campo{margin-bottom:9px}
 .campo label{display:block;font-size:11px;color:var(--texto-3);margin-bottom:3px}
-.campo select,.campo input{
+/* solo las cajas de texto y los desplegables: las casillas de las
+   listas quedan fuera, si no heredan ancho completo y relleno */
+.campo select,
+.campo input[type="search"],
+.campo input[type="text"]{
   width:100%;background:#0a1016;border:1px solid var(--linea);color:var(--texto);
   border-radius:4px;padding:6px 9px;font-size:12.5px;transition:border-color .15s;
 }
-.campo select:hover,.campo input:hover{border-color:var(--linea-2)}
-.campo select:focus,.campo input:focus{border-color:var(--foco);outline:none}
+.campo select:hover,
+.campo input[type="search"]:hover{border-color:var(--linea-2)}
+.campo select:focus,
+.campo input[type="search"]:focus{border-color:var(--foco);outline:none}
 .campo input::placeholder{color:var(--texto-3)}
 .lista-sel{
   border:1px solid var(--linea);border-radius:4px;background:#0a1016;
-  max-height:118px;overflow-y:auto;margin-top:2px;
+  max-height:132px;overflow-y:auto;overflow-x:hidden;margin-top:3px;
 }
-.lista-sel.alta{max-height:150px}
-.lista-sel::-webkit-scrollbar{width:8px}
-.lista-sel::-webkit-scrollbar-thumb{background:var(--linea-2);border-radius:4px}
+.lista-sel.alta{max-height:168px}
+.lista-sel::-webkit-scrollbar{width:9px}
+.lista-sel::-webkit-scrollbar-track{background:transparent}
+.lista-sel::-webkit-scrollbar-thumb{background:var(--linea-2);
+  border-radius:5px;border:2px solid #0a1016}
+
+/* rejilla fija: casilla | nombre | conteo. Sin float ni inline, para
+   que el numero quede siempre alineado a la derecha y no se pegue */
 .opc{
-  display:flex;align-items:center;gap:8px;padding:4px 9px;
-  font-size:12px;cursor:pointer;user-select:none;transition:.1s;
+  display:grid;
+  grid-template-columns:16px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  padding:6px 11px;
+  font-size:12px;
+  line-height:1.3;
+  cursor:pointer;
+  user-select:none;
+  border-bottom:1px solid rgba(43,56,68,.35);
+  transition:background .1s;
 }
-.opc:hover{background:rgba(76,194,255,.07)}
-.opc input{accent-color:var(--foco);margin:0;cursor:pointer;flex:none}
-.opc .txt{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.opc .n{color:var(--texto-3);font-size:10.5px;
-        font-variant-numeric:tabular-nums}
-.opc.vacia{opacity:.35;pointer-events:none}
+.opc:last-child{border-bottom:0}
+.opc:hover{background:rgba(76,194,255,.08)}
+.opc > input[type="checkbox"]{
+  width:15px;height:15px;margin:0;padding:0;
+  accent-color:var(--foco);cursor:pointer;
+  flex:none;border:0;background:none;
+}
+.opc .txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opc .n{
+  color:var(--texto-3);font-size:11px;
+  font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;
+}
+.opc.marcada{background:rgba(76,194,255,.13)}
+.opc.marcada .txt{color:#fff;font-weight:500}
+.opc.vacia{opacity:.3;pointer-events:none}
 .pista{color:var(--texto-3);font-size:10px;text-transform:none;
-       letter-spacing:0}
-#q-barrio{margin-bottom:2px}
+       letter-spacing:0;font-weight:400}
+#q-barrio{margin-bottom:0}
 
 #buscar-wrap{position:relative}
 #sugerencias{
@@ -157,8 +186,40 @@ table.tot tr.off{opacity:.3}
 .chip-f button{background:none;border:0;color:var(--texto-2);cursor:pointer;
                font-size:14px;line-height:1;padding:0 3px}
 .chip-f button:hover{color:#fff}
-#resultado{margin-top:11px;padding-top:11px;border-top:1px solid var(--linea);
-           font-size:12px;color:var(--texto-2);line-height:1.7}
+/* con un filtro activo manda la seleccion: el total del municipio
+   se atenua para que las dos cifras no compitan */
+#cabecera.filtrado .cifra,
+#cabecera.filtrado .cifra-pie,
+#cabecera.filtrado .medidor,
+#cabecera.filtrado table.tot,
+#cabecera.filtrado .dual{opacity:.4;transition:opacity .15s}
+#cabecera.filtrado .cifra:hover,
+#cabecera.filtrado table.tot:hover,
+#cabecera.filtrado .dual:hover{opacity:1}
+
+#resumen-filtro{margin-top:11px;padding-top:10px;
+  border-top:1px solid var(--linea);font-size:12px;
+  color:var(--texto-2);line-height:1.55}
+#resumen-filtro:empty{display:none}
+#resumen-filtro .ver{
+  display:block;margin-top:8px;background:none;border:0;padding:0;
+  color:var(--foco);font-size:11.5px;cursor:pointer;text-align:left;
+}
+#resumen-filtro .ver:hover{text-decoration:underline}
+#resultado:empty{display:none}
+#resultado{margin-top:12px;padding-top:11px;
+           border-top:1px solid var(--linea);
+           font-size:12px;color:var(--texto-2);line-height:1.6}
+#resultado:empty{display:none}
+#resumen-filtro{margin-top:11px;padding-top:10px;
+                border-top:1px solid var(--linea);font-size:12px;
+                color:var(--texto-2)}
+#resumen-filtro:empty{display:none}
+#resumen-filtro .ver{
+  display:block;margin-top:7px;background:none;border:0;padding:0;
+  color:var(--foco);font-size:11.5px;cursor:pointer;text-align:left;
+}
+#resumen-filtro .ver:hover{text-decoration:underline}
 #resultado b{color:var(--texto);font-weight:600}
 #resultado .grande{font-size:19px;font-weight:600;color:var(--texto);
                    letter-spacing:-.02em}
@@ -382,6 +443,7 @@ dl.attr dd.dato{font-weight:500}
   <table class="tot"><tbody id="totales"></tbody></table>
   <div class="divisor"></div>
   <div class="dual" id="dual"></div>
+  <div id="resultado"></div>
 </div>
 
 <div class="panel cajon" id="filtros">
@@ -406,7 +468,7 @@ dl.attr dd.dato{font-weight:500}
     <div class="lista-sel" id="f-entrega"></div>
   </div>
   <div class="chips" id="chips"></div>
-  <div id="resultado"></div>
+  <div id="resumen-filtro"></div>
 </div>
 
 <div class="panel cajon" id="capas">
@@ -782,8 +844,10 @@ function pintarLista(id, clave, valores, etiquetas){
     el.innerHTML = '<input type="checkbox"' + (marcado ? ' checked' : '') + '>'
       + '<span class="txt">' + (etiquetas ? etiquetas[v] : v) + '</span>'
       + '<span class="n"></span>';
+    el.classList.toggle('marcada', marcado);
     el.querySelector('input').onchange = e => {
       e.target.checked ? S.filtros[clave].add(v) : S.filtros[clave].delete(v);
+      el.classList.toggle('marcada', e.target.checked);
       aplicarFiltros();
     };
     cont.appendChild(el);
@@ -924,13 +988,13 @@ function resaltarZonasFiltradas(){
 }
 
 function actualizarResumenFiltrado(){
-  const div = document.getElementById('resultado');
+  const avance = document.getElementById('resultado');
+  const corto  = document.getElementById('resumen-filtro');
+
   if(S.visibles === null){
-    div.innerHTML =
-      '<div><span class="grande mono">' + nf(S.tabla.filas.length)
-      + '</span> predios</div>'
-      + '<div style="font-size:11px;color:var(--texto-3);margin-top:2px">'
-      + 'Todo el municipio</div>';
+    avance.innerHTML = '';
+    corto.innerHTML = '';
+    document.getElementById('cabecera').classList.remove('filtrado');
     return;
   }
 
@@ -944,35 +1008,55 @@ function actualizarResumenFiltrado(){
   }
   const total = S.visibles.size;
   const pc = n => pf(total ? n / total * 100 : 0);
+  const ent = cuenta.ENTREGADO || 0;
 
-  let h = '<div><span class="grande mono">' + nf(total)
-        + '</span> predios en la selección</div>';
+  // en el panel de filtros solo el titular, con un enlace al detalle
+  corto.innerHTML =
+    '<div><b style="font-size:17px;color:var(--texto)" class="mono">'
+    + nf(total) + '</b> predios</div>'
+    + '<div style="margin-top:2px">Entregados <b class="mono">' + nf(ent)
+    + '</b> · <b style="color:var(--entregado)">' + pc(ent) + ' %</b></div>'
+    + '<button class="ver">Ver detalle en Avance &rsaquo;</button>';
+  corto.querySelector('.ver').onclick = () => abrirCajon('cabecera');
 
-  h += '<table class="tot" style="margin-top:7px"><tbody>';
+  // el desglose completo va en el panel de Avance, junto a los totales
+  let h = '<div style="font-size:11px;color:var(--texto-3);'
+        + 'text-transform:uppercase;letter-spacing:.04em">'
+        + 'Selección actual</div>'
+        + '<div style="margin:4px 0 8px"><b class="mono" '
+        + 'style="font-size:20px;color:var(--texto);letter-spacing:-.02em">'
+        + nf(total) + '</b> <span style="font-size:11.5px">predios</span></div>';
+
+  h += '<table class="tot"><tbody>';
   for(const k in ESTADOS){
     const n = cuenta[k];
     if(!n) continue;
-    h += '<tr><td><span class="marca" style="background:' + ESTADOS[k].color
+    h += '<tr style="cursor:default"><td>'
+       + '<span class="marca" style="background:' + ESTADOS[k].color
        + '"></span>' + ESTADOS[k].label + '</td>'
        + '<td class="mono">' + nf(n) + '</td>'
-       + '<td class="mono" style="color:var(--texto-3);padding-left:8px">'
-       + pc(n) + '%</td></tr>';
+       + '<td class="mono" style="color:var(--texto-3);padding-left:9px;'
+       + 'text-align:right">' + pc(n) + ' %</td></tr>';
   }
   h += '</tbody></table>';
 
   const orden = ['juridico', 'reconocimiento', 'geografico'];
   const hay = orden.filter(k => etapas[k]);
   if(hay.length){
-    h += '<div style="margin-top:8px;padding-top:7px;'
+    h += '<div style="margin-top:9px;padding-top:8px;'
        + 'border-top:1px solid var(--linea);font-size:11px;'
-       + 'color:var(--texto-3)">En proceso por etapa</div>';
+       + 'color:var(--texto-3);text-transform:uppercase;'
+       + 'letter-spacing:.04em">En proceso por etapa</div>'
+       + '<table class="tot" style="margin-top:3px"><tbody>';
     for(const k of hay){
-      h += '<div style="display:flex;justify-content:space-between">'
-         + '<span>' + ETAPAS[k] + '</span>'
-         + '<b class="mono">' + nf(etapas[k]) + '</b></div>';
+      h += '<tr style="cursor:default"><td>' + ETAPAS[k] + '</td>'
+         + '<td class="mono">' + nf(etapas[k]) + '</td></tr>';
     }
+    h += '</tbody></table>';
   }
-  div.innerHTML = h;
+
+  avance.innerHTML = h;
+  document.getElementById('cabecera').classList.add('filtrado');
 }
 
 /* ── búsqueda ── */
@@ -2056,21 +2140,19 @@ function pintarCapas(){
 }
 
 const EST_ZONA = {
-  // el AOI va sin relleno: marca el limite sin tapar la ortofoto
-  aoi:      {color:'#7dd3fc', weight:1.6, opacity:.55, fillOpacity:0},
-  perimetro:{color:'#ffffff', weight:3,   opacity:.95, fillOpacity:0,
-             dashArray:'9,6', halo:'#080d12'},
-  uit:      {color:'#4cc2ff', weight:2.4, opacity:.9,  fillOpacity:.05},
-  barrios:  {color:'#ffd166', weight:1.7, opacity:.8,  fillOpacity:.06}
+  // colores saturados: se leen sobre la ortofoto sin taparla.
+  // El AOI no esta aqui: no se dibuja, solo sirve de encuadre.
+  perimetro:{color:'#ff2d55', weight:2.4, opacity:.95, fillOpacity:0,
+             dashArray:'10,6'},
+  uit:      {color:'#ff8c1a', weight:2.2, opacity:.95, fillOpacity:.05},
+  barrios:  {color:'#ffd166', weight:1.7, opacity:.85, fillOpacity:.05}
 };
 
 async function cargarZonas(){
   const cont = document.getElementById('lista-capas');
   const defs = [
-    {a:'contexto/aoi.geojson', l:'Área con ortofoto', k:'aoi',
-     campo:'nombre', on:true},
     {a:'contexto/perimetro.geojson', l:'Perímetro urbano', k:'perimetro',
-     campo:'Nombre', on:true, halo:true},
+     campo:'Nombre', on:true},
     {a:'contexto/uit.geojson', l:'Unidades de intervención', k:'uit',
      campo:'Nombre', on:true, filtro:'uit'},
     {a:'contexto/barrios.geojson', l:'Barrios', k:'barrios',
