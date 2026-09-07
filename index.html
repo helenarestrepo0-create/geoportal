@@ -109,7 +109,8 @@ table.tot tr.off{opacity:.3}
 #filtros{padding:13px 15px 14px}
 #filtros .titulo{font-size:11px;color:var(--texto-2);margin-bottom:10px}
 .campo{margin-bottom:9px}
-.campo label{display:block;font-size:11px;color:var(--texto-3);margin-bottom:3px}
+.campo > label{display:block;font-size:11px;color:var(--texto-3);
+              margin-bottom:3px}
 /* solo las cajas de texto y los desplegables: las casillas de las
    listas quedan fuera, si no heredan ancho completo y relleno */
 .campo select,
@@ -135,7 +136,7 @@ table.tot tr.off{opacity:.3}
 
 /* rejilla fija: casilla | nombre | conteo. Sin float ni inline, para
    que el numero quede siempre alineado a la derecha y no se pegue */
-.opc{
+label.opc, .opc{
   display:grid;
   grid-template-columns:16px minmax(0,1fr) auto;
   align-items:center;
