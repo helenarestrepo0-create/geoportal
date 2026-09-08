@@ -1,128 +1,127 @@
 {
- "corte": "20260904",
- "generado": "2026-09-04T19:27:50",
- "total": 129861,
+ "corte": "20260908",
+ "modo": "inicial_avance",
+ "modo_label": "Base inicial y avance",
+ "generado": "2026-09-08T10:00:44",
+ "total": 116380,
  "estados": {
-  "EN_PROCESO": 81562,
-  "CANCELADO": 1578,
-  "LISTO": 11096,
-  "ENTREGADO": 34837,
-  "ERROR_ETAPA": 788
+  "EN_PROCESO": 71858,
+  "CANCELADO": 1646,
+  "ENTREGADO": 34762,
+  "LISTO": 7344,
+  "ERROR_ETAPA": 770
  },
  "etapas": {
-  "reconocimiento": 56956,
-  "geografico": 21575,
-  "juridico": 3028
+  "reconocimiento": 47013,
+  "geografico": 22550,
+  "juridico": 2292
  },
  "tipos": {
-  "predio": 97087,
-  "matriz": 2653,
-  "unidad_ph": 30121
+  "predio": 87970,
+  "matriz": 336,
+  "unidad_ph": 28074
  },
  "entregas": {
-  "1": 34851,
+  "1": 34777,
   "2": 1
  },
- "pct_entregado": 26.83,
- "pct_listo": 8.54,
+ "pct_entregado": 29.87,
+ "pct_listo": 6.31,
  "avance": {
   "universo_actual": {
-   "total": 129861,
-   "entregados": 34837,
-   "pct": 26.83
+   "total": 116380,
+   "entregados": 34762,
+   "pct": 29.87
   },
   "universo_inicial": {
    "total": 114567,
-   "entregados": 28195,
-   "pct": 24.61
+   "entregados": 28119,
+   "pct": 24.54
   },
-  "nuevos_entregados": 6642,
-  "solo_listado": 4330,
-  "nuevos_en_base": 19624
+  "nuevos_entregados": 6643,
+  "solo_listado": 4830,
+  "nuevos_en_base": 6643
  },
  "por_uit": {
-  "SIN_UIT": {
-   "EN_PROCESO": 1
-  },
   "UIT_01": {
-   "EN_PROCESO": 3339,
-   "CANCELADO": 343,
-   "LISTO": 495,
-   "ENTREGADO": 12745,
-   "ERROR_ETAPA": 42
+   "EN_PROCESO": 2418,
+   "CANCELADO": 335,
+   "ENTREGADO": 12743,
+   "LISTO": 205,
+   "ERROR_ETAPA": 39
   },
   "UIT_02": {
-   "EN_PROCESO": 75,
+   "EN_PROCESO": 50,
    "ENTREGADO": 2930,
-   "CANCELADO": 36,
-   "LISTO": 613,
-   "ERROR_ETAPA": 1
+   "CANCELADO": 38,
+   "ERROR_ETAPA": 1,
+   "LISTO": 1
   },
   "UIT_03": {
-   "EN_PROCESO": 10574,
-   "ENTREGADO": 7737,
-   "LISTO": 2151,
-   "CANCELADO": 563,
-   "ERROR_ETAPA": 15
+   "EN_PROCESO": 9612,
+   "ENTREGADO": 7664,
+   "CANCELADO": 566,
+   "LISTO": 2118,
+   "ERROR_ETAPA": 12
   },
   "UIT_04": {
-   "EN_PROCESO": 6974,
    "ENTREGADO": 4250,
+   "EN_PROCESO": 5949,
    "CANCELADO": 111,
-   "ERROR_ETAPA": 10,
-   "LISTO": 568
+   "LISTO": 561,
+   "ERROR_ETAPA": 7
   },
   "UIT_05": {
-   "EN_PROCESO": 14850,
+   "EN_PROCESO": 13659,
    "ENTREGADO": 5812,
-   "CANCELADO": 208,
-   "LISTO": 2063,
+   "CANCELADO": 223,
+   "LISTO": 1946,
    "ERROR_ETAPA": 559
   },
   "UIT_06": {
-   "EN_PROCESO": 23430,
-   "LISTO": 1042,
-   "CANCELADO": 178,
+   "EN_PROCESO": 21923,
+   "LISTO": 1122,
+   "CANCELADO": 206,
    "ENTREGADO": 449,
    "ERROR_ETAPA": 8
   },
   "UIT_07": {
    "ENTREGADO": 914,
-   "EN_PROCESO": 22319,
-   "CANCELADO": 139,
-   "LISTO": 4164,
-   "ERROR_ETAPA": 153
+   "EN_PROCESO": 18247,
+   "CANCELADO": 167,
+   "ERROR_ETAPA": 144,
+   "LISTO": 1391
   }
  },
  "calidad": {
-  "pendientes_sin_npn": 2518,
-  "comision_terreno": 6492,
-  "comision_construccion": 11844,
-  "omision_terreno": 4259,
-  "omision_construccion": 9501,
-  "ph_sin_lote": 570,
+  "pendientes_sin_npn": 0,
+  "comision_terreno": 0,
+  "comision_construccion": 0,
+  "omision_terreno": 0,
+  "omision_construccion": 0,
+  "ph_sin_lote": 0,
   "errores_etapa": 786
  },
- "puntos_en_mapa": 125032,
+ "puntos_en_mapa": 99558,
  "poligonos": {
   "terrenos": {
    "carpeta": "poligonos",
    "piezas": {
     "UIT_04": {
      "archivo": "terrenos_UIT_04.fgb",
-     "n": 7634,
-     "mb": 2.0,
+     "n": 6970,
+     "mb": 1.8,
      "caja": [
       -73.271221,
-      10.463876,
-      -73.235078,
+      10.465592,
+      -73.237514,
       10.502301
      ]
     },
     "UIT_03": {
      "archivo": "terrenos_UIT_03.fgb",
-     "n": 15788,
-     "mb": 4.1,
+     "n": 14994,
+     "mb": 0,
      "caja": [
       -73.253189,
       10.428113,
@@ -132,21 +131,21 @@
     },
     "UIT_05": {
      "archivo": "terrenos_UIT_05.fgb",
-     "n": 16035,
-     "mb": 4.1,
+     "n": 15093,
+     "mb": 3.9,
      "caja": [
       -73.271058,
-      10.420748,
-      -73.241383,
+      10.421529,
+      -73.24142,
       10.464498
      ]
     },
     "UIT_06": {
      "archivo": "terrenos_UIT_06.fgb",
-     "n": 21038,
-     "mb": 5.4,
+     "n": 20448,
+     "mb": 5.3,
      "caja": [
-      -73.294032,
+      -73.287186,
       10.437526,
       -73.25304,
       10.468974
@@ -154,8 +153,8 @@
     },
     "UIT_07": {
      "archivo": "terrenos_UIT_07.fgb",
-     "n": 25345,
-     "mb": 0,
+     "n": 18798,
+     "mb": 4.8,
      "caja": [
       -73.297961,
       10.452933,
@@ -165,18 +164,18 @@
     },
     "UIT_01": {
      "archivo": "terrenos_UIT_01.fgb",
-     "n": 7942,
-     "mb": 2.1,
+     "n": 7285,
+     "mb": 1.9,
      "caja": [
-      -73.296866,
-      10.463213,
+      -73.295066,
+      10.476655,
       -73.24119,
       10.506768
      ]
     },
     "UIT_02": {
      "archivo": "terrenos_UIT_02.fgb",
-     "n": 2015,
+     "n": 1800,
      "mb": 0.5,
      "caja": [
       -73.236174,
@@ -186,14 +185,14 @@
      ]
     }
    },
-   "n": 95797,
+   "n": 85388,
    "zoom_min": 17,
    "label": "Terrenos",
    "estilos": {
     "*": {
      "color": "#000000",
      "label": "Terrenos",
-     "weight": 1.5,
+     "weight": 2,
      "relleno": 0
     }
    }
@@ -201,32 +200,21 @@
   "construcciones": {
    "carpeta": "poligonos",
    "piezas": {
-    "UIT_01": {
-     "archivo": "construcciones_UIT_01.fgb",
-     "n": 29193,
-     "mb": 10.9,
-     "caja": [
-      -73.295066,
-      10.475384,
-      -73.2412,
-      10.506084
-     ]
-    },
     "UIT_04": {
      "archivo": "construcciones_UIT_04.fgb",
-     "n": 15477,
-     "mb": 6.0,
+     "n": 14710,
+     "mb": 5.7,
      "caja": [
-      -73.270992,
-      10.463876,
-      -73.235288,
+      -73.270975,
+      10.465625,
+      -73.239136,
       10.502122
      ]
     },
     "UIT_03": {
      "archivo": "construcciones_UIT_03.fgb",
-     "n": 30954,
-     "mb": 11.6,
+     "n": 30474,
+     "mb": 0,
      "caja": [
       -73.252549,
       10.428161,
@@ -236,8 +224,8 @@
     },
     "UIT_02": {
      "archivo": "construcciones_UIT_02.fgb",
-     "n": 5814,
-     "mb": 2.2,
+     "n": 4981,
+     "mb": 1.9,
      "caja": [
       -73.23613,
       10.443048,
@@ -247,21 +235,32 @@
     },
     "UIT_05": {
      "archivo": "construcciones_UIT_05.fgb",
-     "n": 30671,
-     "mb": 0,
+     "n": 30336,
+     "mb": 11.4,
      "caja": [
       -73.26902,
-      10.420814,
+      10.421569,
       -73.241424,
       10.464546
      ]
     },
+    "UIT_01": {
+     "archivo": "construcciones_UIT_01.fgb",
+     "n": 27463,
+     "mb": 10.2,
+     "caja": [
+      -73.295066,
+      10.476679,
+      -73.2412,
+      10.506084
+     ]
+    },
     "UIT_06": {
      "archivo": "construcciones_UIT_06.fgb",
-     "n": 39687,
-     "mb": 13.9,
+     "n": 38745,
+     "mb": 13.8,
      "caja": [
-      -73.28941,
+      -73.286356,
       10.43838,
       -73.253162,
       10.468949
@@ -269,49 +268,41 @@
     },
     "UIT_07": {
      "archivo": "construcciones_UIT_07.fgb",
-     "n": 39927,
-     "mb": 14.1,
+     "n": 31823,
+     "mb": 11.4,
      "caja": [
-      -73.296311,
+      -73.296252,
       10.456525,
       -73.257287,
       10.488982
      ]
     }
    },
-   "n": 191723,
+   "n": 178532,
    "zoom_min": 18,
    "label": "Construcciones",
    "estilos": {
     "1": {
-     "color": "#4a9eff",
+     "color": "#3b82f6",
      "label": "Convencional",
-     "weight": 1.2,
-     "relleno": 0.2
+     "weight": 1.5,
+     "relleno": 0.18
     },
     "0": {
-     "color": "#ff5252",
+     "color": "#ef4444",
      "label": "No convencional",
-     "weight": 1.4,
-     "relleno": 0.16,
+     "weight": 1.5,
+     "relleno": 0.15,
      "guion": "4,3"
     }
    }
   }
  },
  "aoi": [
-  -73.306189,
-  10.411423,
-  -73.201025,
-  10.514986
+  -73.29688,
+  10.422186,
+  -73.217526,
+  10.506197
  ],
- "opcionales": [
-  "comision_terreno",
-  "comision_construccion",
-  "omision_terreno",
-  "omision_construccion",
-  "pendientes_terreno",
-  "pendientes_terreno_inf",
-  "pendientes_unidad_inf"
- ]
+ "opcionales": []
 }
