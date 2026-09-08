@@ -2,14 +2,12 @@
  "corte": "20260908",
  "modo": "inicial_avance",
  "modo_label": "Base inicial y avance",
- "generado": "2026-09-08T10:00:44",
+ "generado": "2026-09-08T10:14:44",
  "total": 116380,
  "estados": {
-  "EN_PROCESO": 71858,
-  "CANCELADO": 1646,
-  "ENTREGADO": 34762,
-  "LISTO": 7344,
-  "ERROR_ETAPA": 770
+  "PENDIENTE": 81618,
+  "NUEVO": 6643,
+  "ENTREGADO": 28119
  },
  "etapas": {
   "reconocimiento": 47013,
@@ -25,72 +23,58 @@
   "1": 34777,
   "2": 1
  },
- "pct_entregado": 29.87,
- "pct_listo": 6.31,
+ "pct_entregado": 24.16,
+ "pct_listo": 0.0,
  "avance": {
   "universo_actual": {
    "total": 116380,
-   "entregados": 34762,
-   "pct": 29.87
+   "entregados": 28119,
+   "pct": 24.16
   },
   "universo_inicial": {
    "total": 114567,
    "entregados": 28119,
    "pct": 24.54
   },
-  "nuevos_entregados": 6643,
+  "nuevos_entregados": 0,
   "solo_listado": 4830,
   "nuevos_en_base": 6643
  },
  "por_uit": {
   "UIT_01": {
-   "EN_PROCESO": 2418,
-   "CANCELADO": 335,
-   "ENTREGADO": 12743,
-   "LISTO": 205,
-   "ERROR_ETAPA": 39
+   "PENDIENTE": 2997,
+   "NUEVO": 2786,
+   "ENTREGADO": 9957
   },
   "UIT_02": {
-   "EN_PROCESO": 50,
-   "ENTREGADO": 2930,
-   "CANCELADO": 38,
-   "ERROR_ETAPA": 1,
-   "LISTO": 1
+   "PENDIENTE": 90,
+   "NUEVO": 1272,
+   "ENTREGADO": 1658
   },
   "UIT_03": {
-   "EN_PROCESO": 9612,
-   "ENTREGADO": 7664,
-   "CANCELADO": 566,
-   "LISTO": 2118,
-   "ERROR_ETAPA": 12
+   "PENDIENTE": 12308,
+   "ENTREGADO": 7422,
+   "NUEVO": 242
   },
   "UIT_04": {
-   "ENTREGADO": 4250,
-   "EN_PROCESO": 5949,
-   "CANCELADO": 111,
-   "LISTO": 561,
-   "ERROR_ETAPA": 7
+   "NUEVO": 289,
+   "PENDIENTE": 6628,
+   "ENTREGADO": 3961
   },
   "UIT_05": {
-   "EN_PROCESO": 13659,
-   "ENTREGADO": 5812,
-   "CANCELADO": 223,
-   "LISTO": 1946,
-   "ERROR_ETAPA": 559
+   "PENDIENTE": 16387,
+   "NUEVO": 2007,
+   "ENTREGADO": 3805
   },
   "UIT_06": {
-   "EN_PROCESO": 21923,
-   "LISTO": 1122,
-   "CANCELADO": 206,
-   "ENTREGADO": 449,
-   "ERROR_ETAPA": 8
+   "PENDIENTE": 23259,
+   "ENTREGADO": 443,
+   "NUEVO": 6
   },
   "UIT_07": {
-   "ENTREGADO": 914,
-   "EN_PROCESO": 18247,
-   "CANCELADO": 167,
-   "ERROR_ETAPA": 144,
-   "LISTO": 1391
+   "NUEVO": 41,
+   "PENDIENTE": 19949,
+   "ENTREGADO": 873
   }
  },
  "calidad": {
@@ -296,6 +280,20 @@
      "guion": "4,3"
     }
    }
+  }
+ },
+ "semaforo": {
+  "ENTREGADO": {
+   "label": "Entregado",
+   "color": "#22c55e"
+  },
+  "NUEVO": {
+   "label": "Entregado nuevo",
+   "color": "#38bdf8"
+  },
+  "PENDIENTE": {
+   "label": "Pendiente del listado",
+   "color": "#f5a524"
   }
  },
  "aoi": [
