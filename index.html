@@ -1605,7 +1605,10 @@ function pintarCabecera(){
 
   const a = r.avance;
   if(a){
-    let h = '<div>Universo actual · <b>' + pf(a.universo_actual.pct)
+    // Cuando el corte fija su universo, hay un solo denominador y la
+    // comparacion contra el listado no aplica.
+    const etq = r.universo_fijo ? 'Listado inicial' : 'Universo actual';
+    let h = '<div>' + etq + ' · <b>' + pf(a.universo_actual.pct)
           + ' %</b> de ' + nf(a.universo_actual.total) + '</div>';
     if(a.universo_inicial){
       h += '<div>Listado inicial · <b>' + pf(a.universo_inicial.pct)
@@ -1702,8 +1705,8 @@ function filasDe(fuente, i, omitir, solo){
     if(v === null || v === undefined || v === '') return;
     if(cat[c.key]) v = cat[c.key][v];
     if(v === null || v === undefined || v === '') return;
+    if(c.key === 'ini')     return;      // no se publica
     if(c.key === 'etapa')   v = ETAPAS[v] || v;
-    if(c.key === 'ini')     v = v ? 'Sí' : 'No';
     if(c.key === 'entrega') v = v === 1 ? 'Primera' : (v === 2 ? 'Segunda' : v);
     const t = fmt(v, c.dec);
     if(t !== null) r.push([c.label, t]);
