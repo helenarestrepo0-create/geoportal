@@ -1573,7 +1573,10 @@ function pintarCabecera(){
   document.getElementById('sub').textContent =
     'Valledupar · corte ' + fechaCorte(r.corte);
 
-  const ent = est.ENTREGADO || 0;
+  // que estados cuentan como entregado lo dice el corte: en un corte
+  // de entregas son ENTREGA_1 y ENTREGA_2, no 'ENTREGADO'
+  const claves = r.claves_entregado || ['ENTREGADO'];
+  const ent = claves.reduce((a, k) => a + (est[k] || 0), 0);
   document.getElementById('c-entregado').textContent = nf(ent);
   document.getElementById('c-pct').textContent = pf(ent/total*100) + ' %';
 
