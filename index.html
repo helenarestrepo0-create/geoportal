@@ -554,7 +554,10 @@ const CFG = {
   filaAlto:26
 };
 
-const ESTADOS = {
+/* Leyenda por defecto: el semaforo completo del avance. Si el corte
+   trae la suya (resumen.semaforo), esa manda: un corte de entregados
+   no debe mostrar categorias del avance que no aplican. */
+const ESTADOS_AVANCE = {
   ENTREGADO:  {label:'Entregado',      color:'#22c55e'},
   LISTO:      {label:'Listo para SIG', color:'#38bdf8'},
   EN_PROCESO: {label:'En proceso',     color:'#f5a524'},
@@ -562,6 +565,8 @@ const ESTADOS = {
   CANCELADO:  {label:'Cancelado',      color:'#7c8b99'},
   SIN_MATRIZ: {label:'Sin matriz',     color:'#a78bfa'}
 };
+
+let ESTADOS = ESTADOS_AVANCE;
 const ETAPAS = {juridico:'Jurídico', reconocimiento:'Reconocimiento',
                 geografico:'Geográfico'};
 
@@ -688,6 +693,9 @@ async function arrancar(){
   try{
     detalle('indicadores');
     S.resumen = await traer('resumen.json');
+
+    // el corte decide su propia leyenda
+    if(S.resumen.semaforo) ESTADOS = S.resumen.semaforo;
 
     detalle('atributos');
     S.tabla = await traer('tabla.json');
