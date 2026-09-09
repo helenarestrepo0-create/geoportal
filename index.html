@@ -198,6 +198,17 @@ label.opc, .opc{
 #cabecera.filtrado table.tot:hover,
 #cabecera.filtrado .dual:hover{opacity:1}
 
+#b-limpiar{
+  width:100%;margin-top:10px;padding:7px 10px;font-size:12px;
+  background:var(--tinta-2);border:1px solid var(--linea);
+  color:var(--texto-2);
+}
+#b-limpiar:hover{border-color:var(--error);color:#fff;
+                 background:rgba(244,66,108,.14)}
+#b-limpiar:disabled{opacity:.4;cursor:default}
+#b-limpiar:disabled:hover{border-color:var(--linea);
+                          color:var(--texto-2);background:var(--tinta-2)}
+
 #resumen-filtro{margin-top:11px;padding-top:10px;
   border-top:1px solid var(--linea);font-size:12px;
   color:var(--texto-2);line-height:1.55}
@@ -212,6 +223,17 @@ label.opc, .opc{
            border-top:1px solid var(--linea);
            font-size:12px;color:var(--texto-2);line-height:1.6}
 #resultado:empty{display:none}
+#b-limpiar{
+  width:100%;margin-top:10px;padding:7px 10px;font-size:12px;
+  background:var(--tinta-2);border:1px solid var(--linea);
+  color:var(--texto-2);
+}
+#b-limpiar:hover{border-color:var(--error);color:#fff;
+                 background:rgba(244,66,108,.14)}
+#b-limpiar:disabled{opacity:.4;cursor:default}
+#b-limpiar:disabled:hover{border-color:var(--linea);
+                          color:var(--texto-2);background:var(--tinta-2)}
+
 #resumen-filtro{margin-top:11px;padding-top:10px;
                 border-top:1px solid var(--linea);font-size:12px;
                 color:var(--texto-2)}
@@ -469,6 +491,7 @@ dl.attr dd.dato{font-weight:500}
     <div class="lista-sel" id="f-entrega"></div>
   </div>
   <div class="chips" id="chips"></div>
+  <button class="btn" id="b-limpiar">Eliminar todos los filtros</button>
   <div id="resumen-filtro"></div>
 </div>
 
@@ -585,7 +608,8 @@ const S = {
   ambito:'todos',
   orden:{campo:'npn', asc:true},
   zonas:{}, poli:{}, volando:false, selTipo:null,
-  ultimaConstr:null, aoi:null, filtroEdificio:null
+  ultimaConstr:null, aoi:null, filtroEdificio:null,
+  porNpnTabla:null
 };
 
 /* ── mapa ── */
@@ -661,6 +685,7 @@ document.querySelectorAll('#barra button[data-cajon]').forEach(b =>
   b.onclick = () => abrirCajon(b.dataset.cajon));
 
 document.getElementById('b-aoi').onclick = irAlAoi;
+document.getElementById('b-limpiar').onclick = limpiarFiltros;
 
 /* ══════════ AREA DE INTERES ══════════
    El contorno real de la ortofoto, extraido de sus teselas. Marca hasta
@@ -962,15 +987,11 @@ function pintarChips(){
     });
   }
 
-  if(f.uit.size || f.barrio.size || f.entrega.size || f.manzana
-     || S.filtroEdificio){
-    const el = document.createElement('button');
-    el.className = 'btn';
-    el.style.cssText = 'padding:2px 9px;font-size:11px';
-    el.textContent = 'Limpiar';
-    el.onclick = limpiarFiltros;
-    c.appendChild(el);
-  }
+  // el boton de limpiar vive fijo en el panel: solo se habilita
+  const hay = !!(f.uit.size || f.barrio.size || f.entrega.size
+                 || f.manzana || S.filtroEdificio);
+  const b = document.getElementById('b-limpiar');
+  if(b) b.disabled = !hay;
 }
 
 function limpiarFiltros(){
@@ -1828,14 +1849,26 @@ function puntoDe(i){
   if(!fila) return null;
   const npn = fila[S.col.npn];
   if(!npn || npn.length !== 30) return null;
+  if(npn[21] < '8') return null;               // no es PH
+  if(npn.slice(22) === '00000000') return null;  // ya es la matriz
 
-  const raiz = npn.slice(0, 22);
-  const iN = S.col.npn;
-  for(const [k, pt] of S.porFila){
-    const f = S.tabla.filas[k];
-    if(f && f[iN] && f[iN].slice(0, 22) === raiz) return pt;
+  // el punto es el de SU matriz, no el de cualquier predio que
+  // comparta el prefijo: si no esta dibujada, no hay a donde ir
+  const matriz = npn.slice(0, 22) + '00000000';
+  const k = indiceDe(matriz);
+  return k === undefined ? null : (S.porFila.get(k) || null);
+}
+
+/* indice de una fila por su NPN, construido una sola vez */
+function indiceDe(npn){
+  if(!S.porNpnTabla){
+    S.porNpnTabla = new Map();
+    const iN = S.col.npn;
+    S.tabla.filas.forEach((f, k) => {
+      if(f[iN]) S.porNpnTabla.set(f[iN], k);
+    });
   }
-  return null;
+  return S.porNpnTabla.get(npn);
 }
 
 function avisoSinPunto(){
