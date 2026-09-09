@@ -2,20 +2,20 @@
  "corte": "20260909",
  "modo": "inicial_avance",
  "modo_label": "Base inicial y entregas",
- "generado": "2026-09-09T14:52:13",
+ "generado": "2026-09-09T15:12:12",
  "total": 114567,
  "estados": {
   "ENTREGADO": 35410,
   "EN_PROCESO": 79157
  },
  "etapas": {
-  "reconocimiento": 47062,
   "geografico": 22517,
+  "reconocimiento": 47062,
   "juridico": 2292
  },
  "tipos": {
-  "unidad_ph": 28097,
   "predio": 88078,
+  "unidad_ph": 28097,
   "matriz": 15
  },
  "entregas": {
