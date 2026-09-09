@@ -764,7 +764,11 @@ function construirIndices(geo){
 
   for(const f of geo.features){
     const c = f.geometry.coordinates;
-    const p = {i:f.properties.i, x:c[0], y:c[1], e:f.properties.e};
+    const pr = f.properties;
+    // m=1 marca el punto de una matriz PH: representa a sus unidades,
+    // que no tienen geometria propia. u=cuantas agrupa, ue=entregadas
+    const p = {i:pr.i, x:c[0], y:c[1], e:pr.e};
+    if(pr.m) p.m = 1;
     S.puntos.push(p);
     S.porFila.set(p.i, p);
   }
@@ -1151,8 +1155,9 @@ function elegirSug(s){
   if(s.t === 'predio'){
     cajaQ.value = s.v;
     abrirFicha(s.i);
-    const p = S.porFila.get(s.i);
-    if(p) map.flyTo([p.y,p.x], 19, {duration:.7});
+    const p = puntoDe(s.i);
+    if(p) map.flyTo([p.y, p.x], 19, {duration:.7});
+    else avisoSinPunto();
   }else{
     cajaQ.value = '';
     S.filtros[s.t].add(s.v);
@@ -1729,6 +1734,65 @@ function valorDe(fuente, i, key){
   return v;
 }
 
+/* Unidades de un edificio PH.
+
+   Comparten los primeros 22 digitos del NPN (hasta la condicion): lo
+   que cambia son las posiciones 23-26 de torre y piso y las 27-30 de
+   unidad. Se ordenan por NPN, que es el orden natural del edificio. */
+function unidadesDe(npn, pt){
+  if(!npn || npn.length !== 30) return [];
+  const raiz = npn.slice(0, 22);
+  const iN = S.col.npn, iE = S.col.estado;
+  const fuera = [];
+
+  S.tabla.filas.forEach((f, k) => {
+    const n = f[iN];
+    if(!n || n.length !== 30 || n.slice(0, 22) !== raiz) return;
+    if(n.slice(22) === '00000000') return;       // la matriz no
+    fuera.push([n, S.val(f, 'estado'), k]);
+  });
+
+  fuera.sort((a, b) => a[0] < b[0] ? -1 : 1);
+
+  return fuera.slice(0, 400).map(([n, est, k]) => {
+    const info = ESTADOS[est] || {label:est, color:'#888'};
+    return [
+      '<span class="mono" style="font-size:11px">…' + n.slice(22) + '</span>',
+      '<span style="color:' + info.color + '">' + info.label + '</span>'
+    ];
+  });
+}
+
+/* Punto donde ubicar un predio.
+
+   Una unidad PH no tiene punto propio: la representa el de su matriz.
+   Se busca primero el suyo y, si no hay, el del edificio al que
+   pertenece por los primeros 22 digitos del NPN.                    */
+function puntoDe(i){
+  const p = S.porFila.get(i);
+  if(p) return p;
+
+  const fila = S.tabla.filas[i];
+  if(!fila) return null;
+  const npn = fila[S.col.npn];
+  if(!npn || npn.length !== 30) return null;
+
+  const raiz = npn.slice(0, 22);
+  const iN = S.col.npn;
+  for(const [k, pt] of S.porFila){
+    const f = S.tabla.filas[k];
+    if(f && f[iN] && f[iN].slice(0, 22) === raiz) return pt;
+  }
+  return null;
+}
+
+function avisoSinPunto(){
+  const e = document.getElementById('e-vis');
+  const antes = e.textContent;
+  e.textContent = 'ese predio no tiene ubicación';
+  setTimeout(() => { e.textContent = antes; }, 2600);
+}
+
 function abrirFicha(i, desdeConstruccion){
   const fila = S.tabla.filas[i];
   if(!fila) return;
@@ -1752,8 +1816,18 @@ function abrirFicha(i, desdeConstruccion){
   if(cons != null) destacados.push(['Construido m²', fmt(cons, 0)]);
   if(uni  != null) destacados.push(['Construcciones', fmt(uni, 0)]);
 
+  // si el punto agrupa unidades, la ficha las lista
+  const pt = S.porFila.get(i);
+  const grupos = [];
+  if(pt && pt.m){
+    grupos.push({
+      titulo:'Unidades del edificio', color:info.color,
+      filas:unidadesDe(fila[S.col.npn], pt)
+    });
+  }
+
   pintarFicha({
-    rotulo:'Predio',
+    rotulo: (pt && pt.m) ? 'Predio · edificio PH' : 'Predio',
     titulo:fila[S.col.npn],
     acento:info.color,
     chip:{texto:info.label, color:info.color},
@@ -1767,7 +1841,7 @@ function abrirFicha(i, desdeConstruccion){
       {titulo:'Características', color:'#8ea3b6',
        filas:filasDe(S.ficha, i, ['manzana','direccion','area_terr',
                                   'area_const','n_unid','estado'])}
-    ]
+    ].concat(grupos)
   }, 'f');
   acomodarFichas();
   marcarFilaTabla(i);
@@ -1918,7 +1992,7 @@ function resaltarSeleccion(sel){
   }
 
   // predio: el punto y, si esta cargado, su lote
-  const p = S.porFila.get(sel.i);
+  const p = puntoDe(sel.i);
   if(p){
     L.circleMarker([p.y, p.x], {
       pane:'resalte', radius:11, color:'#4cc2ff', weight:2.5,
@@ -2032,8 +2106,9 @@ tbody.addEventListener('click', e => {
   if(!tr) return;
   const i = +tr.dataset.i;
   abrirFicha(i);
-  const p = S.porFila.get(i);
+  const p = puntoDe(i);
   if(p) map.flyTo([p.y,p.x], Math.max(map.getZoom(), 18), {duration:.6});
+  else avisoSinPunto();
 });
 
 tbody.addEventListener('mouseover', e => {
@@ -2048,7 +2123,7 @@ tbody.addEventListener('mouseleave', () => {
    sin tocar la seleccion actual */
 function previsualizar(i){
   capaVista.clearLayers();
-  const p = S.porFila.get(i);
+  const p = puntoDe(i);
   if(!p) return;
   L.circleMarker([p.y, p.x], {
     pane:'resalte', radius:10, color:'#ffffff', weight:2,
