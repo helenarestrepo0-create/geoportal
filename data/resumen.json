@@ -1,8 +1,8 @@
 {
  "corte": "20260909",
- "modo": "inicial_avance",
- "modo_label": "Base inicial y entregas",
- "generado": "2026-09-09T17:47:47",
+ "modo": "inicial_tentativo",
+ "modo_label": "Base inicial y entregas · tentativo",
+ "generado": "2026-09-09T18:08:09",
  "total": 114567,
  "estados": {
   "ENTREGADO": 67536,
@@ -14,8 +14,8 @@
   "juridico": 2292
  },
  "tipos": {
-  "predio": 92662,
   "unidad_ph": 29341,
+  "predio": 92662,
   "matriz": 2378
  },
  "entregas": {
@@ -181,7 +181,7 @@
     "UIT_01": {
      "archivo": "construcciones_UIT_01.fgb",
      "n": 28201,
-     "mb": 10.5,
+     "mb": 7.9,
      "caja": [
       -73.295066,
       10.475384,
@@ -192,7 +192,7 @@
     "UIT_02": {
      "archivo": "construcciones_UIT_02.fgb",
      "n": 5820,
-     "mb": 2.2,
+     "mb": 1.7,
      "caja": [
       -73.23613,
       10.443048,
@@ -203,7 +203,7 @@
     "UIT_07": {
      "archivo": "construcciones_UIT_07.fgb",
      "n": 37153,
-     "mb": 13.3,
+     "mb": 10.2,
      "caja": [
       -73.296252,
       10.456525,
@@ -225,7 +225,7 @@
     "UIT_04": {
      "archivo": "construcciones_UIT_04.fgb",
      "n": 15348,
-     "mb": 6.0,
+     "mb": 4.7,
      "caja": [
       -73.270992,
       10.465625,
@@ -236,7 +236,7 @@
     "UIT_06": {
      "archivo": "construcciones_UIT_06.fgb",
      "n": 39912,
-     "mb": 14.2,
+     "mb": 11.0,
      "caja": [
       -73.286356,
       10.43838,
@@ -247,7 +247,7 @@
     "UIT_05": {
      "archivo": "construcciones_UIT_05.fgb",
      "n": 30940,
-     "mb": 11.6,
+     "mb": 8.9,
      "caja": [
       -73.26902,
       10.421569,
@@ -290,6 +290,7 @@
  "claves_entregado": [
   "ENTREGADO"
  ],
+ "tentativo": true,
  "aoi": [
   -73.29688,
   10.422186,
