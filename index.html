@@ -585,7 +585,7 @@ const S = {
   ambito:'todos',
   orden:{campo:'npn', asc:true},
   zonas:{}, poli:{}, volando:false, selTipo:null,
-  ultimaConstr:null, aoi:null
+  ultimaConstr:null, aoi:null, filtroEdificio:null
 };
 
 /* ── mapa ── */
@@ -802,6 +802,7 @@ function union(sets){
 
 function aplicarFiltros(){
   const f = S.filtros;
+  S.filtroEdificio = null;      // los filtros normales lo reemplazan
   let res = null;
   const cruzar = c => { res = res === null ? c : interseccion(res, c); };
 
@@ -954,8 +955,15 @@ function pintarChips(){
   for(const v of f.entrega) chip(ETQ[v], () => quitar('entrega', v));
   if(f.manzana) chip('Manzana <b>' + f.manzana + '</b>',
                      () => quitar('manzana', null));
+  if(S.filtroEdificio){
+    chip('Unidades del edificio', () => {
+      S.filtroEdificio = null;
+      aplicarFiltros();
+    });
+  }
 
-  if(f.uit.size || f.barrio.size || f.entrega.size || f.manzana){
+  if(f.uit.size || f.barrio.size || f.entrega.size || f.manzana
+     || S.filtroEdificio){
     const el = document.createElement('button');
     el.className = 'btn';
     el.style.cssText = 'padding:2px 9px;font-size:11px';
@@ -966,6 +974,7 @@ function pintarChips(){
 }
 
 function limpiarFiltros(){
+  S.filtroEdificio = null;
   S.filtros.uit.clear();
   S.filtros.barrio.clear();
   S.filtros.entrega.clear();
@@ -1685,6 +1694,15 @@ function pintarFicha({rotulo, titulo, acento, chip, destacados, grupos},
           '<dt>' + fl[0] + '</dt><dd class="dato">' + fl[1] + '</dd>')
           .map(x => '<div>' + x + '</div>').join('')
       + '</dl>';
+
+    if(g.accion){
+      const b = document.createElement('button');
+      b.className = 'btn';
+      b.style.cssText = 'margin:0 14px 12px;padding:5px 11px;font-size:11.5px';
+      b.textContent = g.accion.texto;
+      b.onclick = () => verUnidadesEnTabla(g.accion.npn);
+      det.appendChild(b);
+    }
     c.appendChild(det);
   }
   f.classList.add('abierta');
@@ -1738,36 +1756,70 @@ function valorDe(fuente, i, key){
 
    Comparten los primeros 22 digitos del NPN (hasta la condicion): lo
    que cambia son las posiciones 23-26 de torre y piso y las 27-30 de
-   unidad. Se ordenan por NPN, que es el orden natural del edificio. */
-function unidadesDe(npn, pt){
+   unidad.
+
+   Se muestran las primeras y el resto se manda a la tabla: un edificio
+   de 200 apartamentos no cabe en la ficha, y la tabla ya tiene scroll,
+   orden y exportacion.                                              */
+
+const UNIDADES_EN_FICHA = 12;
+
+function unidadesDe(npn){
   if(!npn || npn.length !== 30) return [];
   const raiz = npn.slice(0, 22);
-  const iN = S.col.npn, iE = S.col.estado;
+  const iN = S.col.npn;
   const fuera = [];
 
-  S.tabla.filas.forEach((f, k) => {
+  S.tabla.filas.forEach(f => {
     const n = f[iN];
     if(!n || n.length !== 30 || n.slice(0, 22) !== raiz) return;
     if(n.slice(22) === '00000000') return;       // la matriz no
-    fuera.push([n, S.val(f, 'estado'), k]);
+    fuera.push([n, S.val(f, 'estado')]);
   });
 
   fuera.sort((a, b) => a[0] < b[0] ? -1 : 1);
+  return fuera;
+}
 
-  return fuera.slice(0, 400).map(([n, est, k]) => {
+/* filas para la ficha, recortadas */
+function filasUnidades(lista){
+  const filas = lista.slice(0, UNIDADES_EN_FICHA).map(([n, est]) => {
     const info = ESTADOS[est] || {label:est, color:'#888'};
     return [
       '<span class="mono" style="font-size:11px">…' + n.slice(22) + '</span>',
       '<span style="color:' + info.color + '">' + info.label + '</span>'
     ];
   });
+  if(lista.length > UNIDADES_EN_FICHA){
+    filas.push([
+      '<span style="color:var(--texto-3)">y ' +
+      nf(lista.length - UNIDADES_EN_FICHA) + ' más</span>', '']);
+  }
+  return filas;
 }
 
-/* Punto donde ubicar un predio.
+/* manda las unidades del edificio a la tabla grande */
+function verUnidadesEnTabla(npn){
+  const raiz = npn.slice(0, 22);
+  const iN = S.col.npn;
+  const s = new Set();
+  S.tabla.filas.forEach((f, k) => {
+    const n = f[iN];
+    if(n && n.length === 30 && n.slice(0, 22) === raiz
+       && n.slice(22) !== '00000000') s.add(k);
+  });
+  if(!s.size) return;
 
-   Una unidad PH no tiene punto propio: la representa el de su matriz.
-   Se busca primero el suyo y, si no hay, el del edificio al que
-   pertenece por los primeros 22 digitos del NPN.                    */
+  S.visibles = s;
+  S.filtroEdificio = npn;
+  pintarChips();
+  actualizarListas();
+  actualizarResumenFiltrado();
+  redibujar();
+  pintarTabla();
+  abrirGaveta();
+}
+
 function puntoDe(i){
   const p = S.porFila.get(i);
   if(p) return p;
@@ -1816,18 +1868,24 @@ function abrirFicha(i, desdeConstruccion){
   if(cons != null) destacados.push(['Construido m²', fmt(cons, 0)]);
   if(uni  != null) destacados.push(['Construcciones', fmt(uni, 0)]);
 
-  // si el punto agrupa unidades, la ficha las lista
-  const pt = S.porFila.get(i);
+  // si el predio agrupa unidades, la ficha las lista
+  const npnEste = fila[S.col.npn];
   const grupos = [];
-  if(pt && pt.m){
+  const uds = (npnEste && npnEste.length === 30
+               && npnEste[21] >= '8' && npnEste.slice(22) === '00000000')
+              ? unidadesDe(npnEste) : [];
+  if(uds.length){
     grupos.push({
-      titulo:'Unidades del edificio', color:info.color,
-      filas:unidadesDe(fila[S.col.npn], pt)
+      titulo:'Unidades del edificio · ' + nf(uds.length),
+      color:info.color,
+      filas:filasUnidades(uds),
+      abierto:false,
+      accion:{texto:'Ver todas en la tabla', npn:npnEste}
     });
   }
 
   pintarFicha({
-    rotulo: (pt && pt.m) ? 'Predio · edificio PH' : 'Predio',
+    rotulo: uds.length ? 'Predio · edificio PH' : 'Predio',
     titulo:fila[S.col.npn],
     acento:info.color,
     chip:{texto:info.label, color:info.color},
