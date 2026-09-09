@@ -2,11 +2,11 @@
  "corte": "20260909",
  "modo": "inicial_avance",
  "modo_label": "Base inicial y entregas",
- "generado": "2026-09-09T15:47:17",
+ "generado": "2026-09-09T16:01:50",
  "total": 114567,
  "estados": {
-  "ENTREGADO": 67931,
-  "EN_PROCESO": 46636
+  "ENTREGADO": 67915,
+  "EN_PROCESO": 46652
  },
  "etapas": {
   "geografico": 23923,
@@ -14,13 +14,13 @@
   "juridico": 2291
  },
  "tipos": {
-  "predio": 92559,
   "unidad_ph": 29341,
+  "predio": 92559,
   "matriz": 338
  },
  "entregas": {
-  "1": 34516,
-  "2": 33415
+  "1": 34501,
+  "2": 33414
  },
  "proyectos_entrega": [
   {
@@ -32,27 +32,27 @@
    "n": 33414
   }
  ],
- "pct_entregado": 59.29,
+ "pct_entregado": 59.28,
  "pct_listo": 0.0,
  "avance": {
   "universo_actual": {
    "total": 114567,
-   "entregados": 67931,
-   "pct": 59.29
+   "entregados": 67915,
+   "pct": 59.28
   }
  },
  "por_uit": {
   "UIT_01": {
-   "ENTREGADO": 14164,
-   "EN_PROCESO": 1862
+   "ENTREGADO": 14153,
+   "EN_PROCESO": 1873
   },
   "UIT_02": {
    "ENTREGADO": 3565,
    "EN_PROCESO": 65
   },
   "UIT_03": {
-   "ENTREGADO": 15589,
-   "EN_PROCESO": 4538
+   "ENTREGADO": 15587,
+   "EN_PROCESO": 4540
   },
   "UIT_04": {
    "ENTREGADO": 6063,
@@ -67,8 +67,8 @@
    "EN_PROCESO": 16259
   },
   "UIT_07": {
-   "ENTREGADO": 7562,
-   "EN_PROCESO": 17195
+   "ENTREGADO": 7559,
+   "EN_PROCESO": 17198
   }
  },
  "calidad": {
