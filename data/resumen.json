@@ -2,16 +2,16 @@
  "corte": "20260909",
  "modo": "inicial_avance",
  "modo_label": "Base inicial y entregas",
- "generado": "2026-09-09T08:55:10",
+ "generado": "2026-09-09T14:10:02",
  "total": 114567,
  "estados": {
   "ENTREGADO": 34856,
   "EN_PROCESO": 79711
  },
  "etapas": {
-  "geografico": 22550,
   "reconocimiento": 47013,
-  "juridico": 2292
+  "juridico": 2292,
+  "geografico": 22550
  },
  "tipos": {
   "predio": 88041,
