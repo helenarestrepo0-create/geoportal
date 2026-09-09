@@ -1284,7 +1284,9 @@ map.on('mousemove', e => {
     if(!p){
       tt.style.display = 'none';
       // solo en zoom cerrado: mas lejos hay demasiadas y no se distinguen
-      const c = map.getZoom() >= 19 ? construccionEn(e.latlng) : null;
+      const c = (map.getZoom() >= 19
+                 && !(S.resumen && S.resumen.tentativo))
+                ? construccionEn(e.latlng) : null;
       if(c){
         const pr = c.properties;
         const conv = pr.c === 0 ? 'No convencional' : 'Convencional';
@@ -1330,7 +1332,9 @@ map.on('click', e => {
   const p = puntoEn(e.latlng, e.containerPoint);
   if(p) return abrirFicha(p.i);
 
-  // 2) si no, se mira si el clic cayo dentro de una construccion
+  // 2) si no, se mira si el clic cayo dentro de una construccion.
+  //    En el corte tentativo las construcciones son solo dibujo.
+  if(S.resumen && S.resumen.tentativo) return;
   const c = construccionEn(e.latlng);
   if(c) return abrirFichaConstruccion(c);
 });
@@ -2035,7 +2039,8 @@ function acomodarFichas(){
   bp.classList.toggle('on', va);
   bc.classList.toggle('on', vb);
   bp.disabled = (S.seleccion === null);
-  bc.disabled = !S.ultimaConstr;
+  bc.disabled = !S.ultimaConstr || (S.resumen && S.resumen.tentativo);
+  bc.style.display = (S.resumen && S.resumen.tentativo) ? 'none' : '';
   bp.style.opacity = bp.disabled ? .35 : 1;
   bc.style.opacity = bc.disabled ? .35 : 1;
 }
