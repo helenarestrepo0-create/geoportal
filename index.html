@@ -765,6 +765,7 @@ async function arrancar(){
 
 function construirIndices(geo){
   S.tabla.campos.forEach((c,i) => S.col[c.key] = i);
+  ajustarColumnas();
   const cat = S.tabla.catalogo || {};
 
   S.val = (fila, key) => {
@@ -1084,7 +1085,7 @@ function actualizarResumenFiltrado(){
   h += '</tbody></table>';
 
   const orden = ['juridico', 'reconocimiento', 'geografico'];
-  const hay = orden.filter(k => etapas[k]);
+  const hay = S.col.etapa === undefined ? [] : orden.filter(k => etapas[k]);
   if(hay.length){
     h += '<div style="margin-top:9px;padding-top:8px;'
        + 'border-top:1px solid var(--linea);font-size:11px;'
@@ -2106,7 +2107,13 @@ function resaltarSeleccion(sel){
 }
 
 /* ── tabla con scroll virtual ── */
-const COLS = ['npn','barrio','uit','estado','etapa'];
+let COLS = ['npn','barrio','uit','estado','etapa'];
+
+/* el corte decide que columnas hay: si no publica la etapa, la
+   columna no se muestra */
+function ajustarColumnas(){
+  COLS = COLS.filter(k => S.col[k] !== undefined);
+}
 const ANCHOS = {npn:'34%', barrio:'26%', uit:'12%', estado:'16%', etapa:'12%'};
 const scroll = document.getElementById('scroll');
 const tbody = document.getElementById('tbody');

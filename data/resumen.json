@@ -1,21 +1,21 @@
 {
- "corte": "20260909",
+ "corte": "20260910",
  "modo": "inicial_tentativo",
  "modo_label": "Base inicial y entregas · tentativo",
- "generado": "2026-09-09T18:08:09",
+ "generado": "2026-09-10T09:24:40",
  "total": 114567,
  "estados": {
   "ENTREGADO": 67536,
   "EN_PROCESO": 47031
  },
  "etapas": {
-  "geografico": 23941,
-  "reconocimiento": 49377,
-  "juridico": 2292
+  "geografico": 24350,
+  "reconocimiento": 48960,
+  "juridico": 2290
  },
  "tipos": {
-  "unidad_ph": 29341,
-  "predio": 92662,
+  "unidad_ph": 29342,
+  "predio": 92661,
   "matriz": 2378
  },
  "entregas": {
@@ -42,9 +42,12 @@
   }
  },
  "por_uit": {
+  "SIN_UIT": {
+   "EN_PROCESO": 1
+  },
   "UIT_01": {
    "ENTREGADO": 14310,
-   "EN_PROCESO": 2077
+   "EN_PROCESO": 2078
   },
   "UIT_02": {
    "ENTREGADO": 3370,
@@ -52,7 +55,7 @@
   },
   "UIT_03": {
    "ENTREGADO": 15607,
-   "EN_PROCESO": 4939
+   "EN_PROCESO": 4937
   },
   "UIT_04": {
    "ENTREGADO": 6061,
@@ -80,7 +83,7 @@
   "ph_sin_lote": 0,
   "errores_etapa": 0
  },
- "puntos_en_mapa": 90701,
+ "puntos_en_mapa": 90700,
  "poligonos": {
   "terrenos": {
    "carpeta": "poligonos",
@@ -109,7 +112,7 @@
     },
     "UIT_07": {
      "archivo": "terrenos_UIT_07.fgb",
-     "n": 22884,
+     "n": 22885,
      "mb": 5.9,
      "caja": [
       -73.297961,
@@ -120,7 +123,7 @@
     },
     "UIT_03": {
      "archivo": "terrenos_UIT_03.fgb",
-     "n": 15503,
+     "n": 15501,
      "mb": 0,
      "caja": [
       -73.253189,
@@ -142,24 +145,35 @@
     },
     "UIT_04": {
      "archivo": "terrenos_UIT_04.fgb",
-     "n": 7275,
+     "n": 7276,
      "mb": 1.9,
      "caja": [
       -73.271221,
-      10.465592,
+      10.465556,
       -73.237514,
       10.502301
      ]
     },
     "UIT_06": {
      "archivo": "terrenos_UIT_06.fgb",
-     "n": 20920,
+     "n": 20919,
      "mb": 5.4,
      "caja": [
       -73.287186,
       10.437526,
       -73.25304,
       10.468974
+     ]
+    },
+    "SIN_UIT_0101": {
+     "archivo": "terrenos_SIN_UIT_0101.fgb",
+     "n": 1,
+     "mb": 0.0,
+     "caja": [
+      -73.254391,
+      10.467387,
+      -73.253531,
+      10.467829
      ]
     }
    },
@@ -191,7 +205,7 @@
     },
     "UIT_02": {
      "archivo": "construcciones_UIT_02.fgb",
-     "n": 5820,
+     "n": 5821,
      "mb": 1.7,
      "caja": [
       -73.23613,
@@ -202,7 +216,7 @@
     },
     "UIT_07": {
      "archivo": "construcciones_UIT_07.fgb",
-     "n": 37153,
+     "n": 37154,
      "mb": 10.2,
      "caja": [
       -73.296252,
@@ -235,7 +249,7 @@
     },
     "UIT_06": {
      "archivo": "construcciones_UIT_06.fgb",
-     "n": 39912,
+     "n": 39910,
      "mb": 11.0,
      "caja": [
       -73.286356,
@@ -246,7 +260,7 @@
     },
     "UIT_05": {
      "archivo": "construcciones_UIT_05.fgb",
-     "n": 30940,
+     "n": 30942,
      "mb": 8.9,
      "caja": [
       -73.26902,
@@ -254,9 +268,20 @@
       -73.241424,
       10.464546
      ]
+    },
+    "SIN_UIT_0101": {
+     "archivo": "construcciones_SIN_UIT_0101.fgb",
+     "n": 4,
+     "mb": 0.0,
+     "caja": [
+      -73.254386,
+      10.467542,
+      -73.253617,
+      10.467829
+     ]
     }
    },
-   "n": 188334,
+   "n": 188340,
    "zoom_min": 18,
    "label": "Construcciones",
    "estilos": {
