@@ -270,6 +270,35 @@ label.opc, .opc{
 #ficha-c.bajo{top:auto;bottom:calc(var(--gaveta) + 12px);
               max-height:calc(50vh - var(--gaveta)/2 - 16px)}
 #ficha.abierta, #ficha-c.abierta{display:flex}
+/* vista 360 / 3D: ocupa el lugar de la ficha; se puede agrandar */
+#panel360{right:60px;top:12px;width:470px;display:none;flex-direction:column;
+  overflow:hidden;padding:0;height:min(640px, calc(100vh - var(--gaveta) - 26px))}
+#panel360.abierto{display:flex}
+#panel360.grande{width:calc(100vw - 140px);left:72px;z-index:615;
+  height:calc(100vh - var(--gaveta) - 26px)}
+#panel360 .cab{padding:9px 14px;border-bottom:1px solid var(--linea);display:flex;
+  align-items:center;gap:10px;border-left:3px solid #f97316;flex:none}
+#panel360 .rotulo{font-size:10.5px;color:var(--texto-3);letter-spacing:.04em;
+  text-transform:uppercase}
+#panel360 .cerrar{background:none;border:0;color:var(--texto-2);font-size:17px;
+  cursor:pointer;padding:0 3px;line-height:1}
+#panel360 #p360-grande{margin-left:auto;font-size:15px}
+#panel360 .cerrar:hover{color:#fff}
+#panel360 .sec{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+#panel360 .sec + .sec{border-top:1px solid var(--linea)}
+#panel360 .sec[hidden]{display:none}
+#panel360 .sec-tit{flex:none;display:flex;gap:8px;align-items:baseline;
+  padding:5px 12px;font-size:10.5px;color:var(--texto-3);text-transform:uppercase;
+  letter-spacing:.04em;background:#0e141a}
+#panel360 .sec-tit span{text-transform:none;letter-spacing:0;font-size:11px;
+  color:var(--texto-2);font-family:ui-monospace,monospace}
+#pano, #cesium3d{flex:1;min-height:0;background:#000;position:relative}
+#panel360 .msg{position:absolute;left:0;right:0;top:28px;bottom:0;display:flex;
+  align-items:center;justify-content:center;text-align:center;padding:20px;
+  color:var(--texto-2);font-size:12.5px;background:rgba(0,0,0,.72);z-index:5}
+#panel360 .msg[hidden]{display:none}
+#cesium3d .cesium-viewer-bottom{display:none}
+.modo360 #mapa, .modo360 .leaflet-container{cursor:crosshair!important}
 #ficha .cab, #ficha-c .cab{
   padding:11px 14px 11px;border-bottom:1px solid var(--linea);
   display:flex;align-items:flex-start;gap:10px;flex:none;
@@ -404,6 +433,10 @@ dl.attr dd.dato{font-weight:500}
 .leaflet-tooltip.zona{background:rgba(14,20,26,.95);border:1px solid var(--linea-2);
   color:var(--texto);font-size:11.5px;box-shadow:none}
 .leaflet-tooltip.zona::before{display:none}
+.leaflet-tooltip.rotulo-comuna{background:#ffffff;border:2px solid #000000;
+  color:#000000;font-weight:700;font-size:13px;border-radius:4px;
+  padding:1px 7px;box-shadow:0 1px 4px rgba(0,0,0,.45)}
+.leaflet-tooltip.rotulo-comuna::before{display:none}
 
 @media (max-width:820px){
   .cajon{left:56px;right:12px;width:auto}
@@ -417,6 +450,97 @@ dl.attr dd.dato{font-weight:500}
   #estado{display:none}
   #gaveta.abierta{height:230px}
 }
+
+/* ══ modulo economico: solo aparece si el corte trae economico.json ══ */
+#tema-wrap{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--linea)}
+#tema-wrap select{width:100%;background:#0a1016;border:1px solid var(--linea);
+  color:var(--texto);border-radius:4px;padding:6px 9px;font-size:12.5px}
+#leyenda-tema{margin-top:8px}
+#leyenda-tema .fila-ley{display:flex;align-items:center;gap:8px;padding:2.5px 0;
+  font-size:12px}
+#leyenda-tema .fila-ley .n{margin-left:auto;color:var(--texto-3);font-size:11px}
+#leyenda-tema .fila-ley.clic{cursor:pointer;border-radius:3px}
+#leyenda-tema .fila-ley.clic:hover{background:rgba(76,194,255,.08)}
+#leyenda-tema .fila-ley.off{opacity:.3}
+.ir{color:var(--foco);cursor:pointer}
+.ir:hover{text-decoration:underline}
+#tabla td.num{text-align:right}
+.cond-tit{font-size:11px;color:var(--texto-3);text-transform:uppercase;
+  letter-spacing:.04em;margin-bottom:5px}
+table.tot.cond th{font-size:10.5px;color:var(--texto-3);font-weight:400;
+  text-align:right;padding:0 0 3px 8px}
+table.tot.cond tr{cursor:default}
+table.tot.cond td + td{padding-left:8px}
+#pivote{flex:1;display:flex;min-height:0}
+#pivote[hidden]{display:none}
+/* campos y zonas lado a lado: las zonas siempre a la vista al arrastrar */
+.pv-lado{width:440px;flex:none;border-right:1px solid var(--linea);display:flex}
+.pv-col{flex:1;min-width:0;overflow-y:auto;padding:6px 11px 12px}
+.pv-col + .pv-col{border-left:1px solid var(--linea)}
+.pv-tit{font-size:10.5px;color:var(--texto-3);text-transform:uppercase;
+  letter-spacing:.04em;margin:9px 0 4px;display:flex;align-items:baseline;gap:6px}
+.pv-tit .pista{text-transform:none;letter-spacing:0}
+.pv-grupo{font-size:10.5px;color:var(--texto-3);margin:5px 0 3px}
+.pv-lista{display:flex;flex-wrap:wrap;gap:4px}
+.pv-chip{display:inline-flex;align-items:center;gap:5px;background:var(--tinta-2);
+  border:1px solid var(--linea-2);border-radius:4px;padding:3px 7px;
+  font-size:11.5px;cursor:grab;user-select:none;color:var(--texto)}
+.pv-chip:hover{border-color:var(--foco)}
+.pv-chip.val{border-left:3px solid #22c55e}
+.pv-chip.dim{border-left:3px solid #4cc2ff}
+.pv-chip.usado{opacity:.35}
+.pv-zona{min-height:32px;border:1px dashed var(--linea-2);border-radius:5px;
+  padding:4px;display:flex;flex-direction:column;gap:4px;transition:.12s}
+.pv-zona.sobre{border-color:var(--foco);background:rgba(76,194,255,.07)}
+.pv-zona .pv-chip{width:100%}
+.pv-chip .asa{color:var(--texto-3);font-size:10px;letter-spacing:-2px}
+.pv-chip .x{margin-left:auto;background:none;border:0;color:var(--texto-2);
+  cursor:pointer;font-size:14px;line-height:1;padding:0 2px}
+.pv-chip .x:hover{color:#fff}
+.pv-chip select{background:#0a1016;border:1px solid var(--linea);color:var(--texto);
+  border-radius:3px;font-size:11px;padding:1px 3px}
+.pv-vacio{font-size:11px;color:var(--texto-3);padding:5px;text-align:center}
+.pv-chip.fil{border-left:3px solid #f5a524}
+.pv-chip .res{color:var(--texto-3);font-size:10.5px;margin-left:2px}
+.pv-chip .abre{background:none;border:0;color:var(--texto-2);cursor:pointer;
+  font-size:10px;padding:0 2px}
+.pv-valores{border:1px solid var(--linea);border-radius:4px;background:#0a1016;
+  max-height:190px;overflow-y:auto;margin-top:-1px}
+.pv-valores .acc{display:flex;gap:10px;padding:4px 8px;border-bottom:1px solid var(--linea);
+  font-size:11px}
+.pv-valores .acc button{background:none;border:0;color:var(--foco);cursor:pointer;
+  padding:0;font-size:11px}
+.pv-valores label{display:flex;align-items:center;gap:7px;padding:3px 8px;
+  font-size:11.5px;cursor:pointer}
+.pv-valores label:hover{background:rgba(76,194,255,.08)}
+.pv-valores input{accent-color:var(--foco);margin:0}
+.pv-valores .n{margin-left:auto;color:var(--texto-3);font-size:10.5px}
+.pv-main{flex:1;display:flex;flex-direction:column;min-width:0}
+.pv-barra{display:flex;align-items:center;gap:8px;padding:6px 12px;
+  border-bottom:1px solid var(--linea);flex:none}
+#pv-nota{color:var(--texto-3);font-size:11.5px}
+#pv-scroll{flex:1;overflow:auto;position:relative}
+#pv-tabla{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100%}
+#pv-tabla th{position:sticky;z-index:2;background:#141d25;font-weight:600;
+  font-size:11px;color:var(--texto-2);padding:6px 11px;text-align:center;
+  border-bottom:1px solid var(--linea);border-right:1px solid rgba(43,56,68,.5);
+  white-space:nowrap;height:27px}
+#pv-tabla th.esq{text-align:left;left:0;z-index:4;vertical-align:bottom}
+#pv-tabla th.v{text-align:right}
+#pv-tabla td{padding:5px 11px;border-bottom:1px solid rgba(43,56,68,.35);
+  text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+#pv-tabla td.lbl{text-align:left;position:sticky;left:0;z-index:1;
+  background:#0e141a;font-variant-numeric:normal}
+#pv-tabla td.t, #pv-tabla th.t{color:var(--texto);font-weight:600}
+#pv-tabla tr.sub td{font-weight:600;color:var(--texto)}
+#pv-tabla tr.sub td.lbl{background:#121a21}
+#pv-tabla tr.tot td{border-top:1px solid var(--linea-2);font-weight:600;
+  color:var(--texto);background:#141d25;position:sticky;bottom:0}
+#pv-tabla tr.tot td.lbl{z-index:3}
+.pv-tog{display:inline-block;width:14px;cursor:pointer;color:var(--texto-2)}
+.pv-tog:hover{color:#fff}
+.pv-grande{padding:22px 24px;color:var(--texto-2);font-size:12.5px;line-height:1.6}
+.pv-grande b{color:var(--texto)}
 </style>
 </head>
 <body>
@@ -447,6 +571,10 @@ dl.attr dd.dato{font-weight:500}
     <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/>
       <circle cx="12" cy="10" r="2.5"/></svg>
   </button>
+  <button id="b-360" data-tip="360° / 3D: clic en el mapa" aria-label="360 y 3D" hidden>
+    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="4"/>
+      <path d="M12 3v2M12 19v2"/><circle cx="12" cy="12" r="1.6"/></svg>
+  </button>
   <div class="sep"></div>
   <button id="b-tabla" data-tip="Tabla de predios" aria-label="Tabla">
     <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/>
@@ -464,6 +592,12 @@ dl.attr dd.dato{font-weight:500}
   <div class="cifra-pie">predios entregados</div>
   <div class="medidor" id="medidor"></div>
   <table class="tot"><tbody id="totales"></tbody></table>
+  <div id="cond-wrap" hidden>
+    <div class="divisor"></div>
+    <div class="cond-tit">Por condición del predio</div>
+    <table class="tot cond"><thead><tr><th></th><th>Predios</th>
+      <th>Con liquidación</th></tr></thead><tbody id="cond"></tbody></table>
+  </div>
   <div class="divisor"></div>
   <div class="dual" id="dual"></div>
   <div id="resultado"></div>
@@ -497,6 +631,11 @@ dl.attr dd.dato{font-weight:500}
 
 <div class="panel cajon" id="capas">
   <div class="titulo">Capas</div>
+  <div id="tema-wrap" hidden>
+    <label class="titulo" for="tema" style="display:block">Colorear predios por</label>
+    <select id="tema"></select>
+    <div id="leyenda-tema"></div>
+  </div>
   <div id="lista-capas"></div>
   <details id="det-calidad" hidden>
     <summary>Revisión de calidad</summary>
@@ -529,6 +668,24 @@ dl.attr dd.dato{font-weight:500}
   <div class="cuerpo" id="f-cuerpo"></div>
 </div>
 
+<div class="panel" id="panel360">
+  <div class="cab">
+    <div class="rotulo">Vista 360° / 3D</div>
+    <button class="cerrar" id="p360-grande" title="Agrandar / reducir">⤢</button>
+    <button class="cerrar" id="p360-cerrar" aria-label="Cerrar">×</button>
+  </div>
+  <div class="sec" id="sec360" hidden>
+    <div class="sec-tit">Foto 360° <span id="p360-info"></span></div>
+    <div id="pano"></div>
+    <div class="msg" id="msg360" hidden></div>
+  </div>
+  <div class="sec" id="sec3d" hidden>
+    <div class="sec-tit">Modelo 3D <span id="p3d-info"></span></div>
+    <div id="cesium3d"></div>
+    <div class="msg" id="msg3d" hidden></div>
+  </div>
+</div>
+
 <div class="panel" id="ficha-c">
   <div class="cab">
     <div style="min-width:0">
@@ -542,7 +699,11 @@ dl.attr dd.dato{font-weight:500}
 
 <div id="gaveta">
   <div class="barra">
-    <span class="tit">Predios</span>
+    <span class="tit" id="g-tit">Predios</span>
+    <div class="seg" id="g-vista" hidden>
+      <button data-v="predios" class="on">Predios</button>
+      <button data-v="pivote">Tabla dinámica</button>
+    </div>
     <span class="cuenta mono" id="g-cuenta">—</span>
     <div class="seg">
       <button id="g-todos" class="on">Todos</button>
@@ -556,6 +717,32 @@ dl.attr dd.dato{font-weight:500}
       <thead><tr id="thead"></tr></thead>
       <tbody id="tbody"></tbody>
     </table>
+  </div>
+  <div id="pivote" hidden>
+    <div class="pv-lado">
+     <div class="pv-col">
+      <div class="pv-tit">Campos <span class="pista">arrastra o haz clic</span></div>
+      <div id="pv-campos"></div>
+     </div>
+     <div class="pv-col">
+      <div class="pv-tit">Filtros</div>
+      <div class="pv-zona" data-zona="filtros"></div>
+      <div class="pv-tit">Filas</div>
+      <div class="pv-zona" data-zona="filas"></div>
+      <div class="pv-tit">Columnas</div>
+      <div class="pv-zona" data-zona="cols"></div>
+      <div class="pv-tit">Valores</div>
+      <div class="pv-zona" data-zona="valores"></div>
+     </div>
+    </div>
+    <div class="pv-main">
+      <div class="pv-barra">
+        <button class="btn" id="pv-exp">Expandir todo</button>
+        <button class="btn" id="pv-con">Contraer todo</button>
+        <span id="pv-nota"></span>
+      </div>
+      <div id="pv-scroll"><table id="pv-tabla"></table></div>
+    </div>
   </div>
 </div>
 
@@ -609,7 +796,15 @@ const S = {
   orden:{campo:'npn', asc:true},
   zonas:{}, poli:{}, volando:false, selTipo:null,
   ultimaConstr:null, aoi:null, filtroEdificio:null,
-  porNpnTabla:null
+  porNpnTabla:null,
+  // modulo economico (solo si el corte trae economico.json)
+  eco:null, ecoCol:{}, fichaCol:{}, esMatriz:new Set(), hijasDe:new Map(),
+  tema:'estado', temaOff:new Set(), clases:null, vista:'predios',
+  pivote:{filas:['uit'], cols:[], valores:[{k:'__n', op:'conteo'}],
+          filtros:[{k:'estado', off:new Set(['Sin liquidación'])}]},
+  pvCerrados:new Set(), pvAprobado:null, pvContraer:false, pvAbierto:null,
+  // foto 360 (solo si el corte trae visor360)
+  modo360:false, visor360:null
 };
 
 /* ── mapa ── */
@@ -726,11 +921,21 @@ async function arrancar(){
     S.tabla = await traer('tabla.json');
     S.dominios = await traer('dominios.json', false) || {};
 
+    // corte economico: los avaluos y la ficha se necesitan desde el
+    // arranque (temático, tabla y tabla dinámica)
+    if(S.resumen.economico){
+      detalle('avalúos');
+      S.eco = await traer(S.resumen.economico.archivo || 'economico.json');
+      S.ficha = await traer('ficha.json', false);
+    }
+
     detalle('geometrías');
     const geo = await traer('predios.geojson');
 
     detalle('indexando');
     construirIndices(geo);
+    if(S.eco) prepararEconomico();
+    if(S.resumen.visor360 || S.resumen.visor3d) prepararVistas();
 
     pintarCabecera();
     pintarFiltros();
@@ -751,7 +956,7 @@ async function arrancar(){
     document.getElementById('carga').style.display = 'none';
     abrirCajon('cabecera');
     acomodarFichas();
-    traer('ficha.json', false).then(f => { S.ficha = f; });
+    if(!S.ficha) traer('ficha.json', false).then(f => { S.ficha = f; });
     cargarZonas();
   }catch(e){
     document.getElementById('carga').innerHTML =
@@ -855,6 +1060,18 @@ function aplicarFiltros(){
     S.tabla.filas.forEach((fila, i) => {
       if(String(fila[iN]).startsWith(f.manzana)) s.add(i);
     });
+    cruzar(s);
+  }
+
+  // categorias apagadas en la leyenda del tematico (portal economico)
+  if(S.eco && S.temaOff.size){
+    const s = new Set();
+    S.tabla.filas.forEach((_, i) => {
+      if(S.esMatriz.has(i)) return;
+      if(!S.temaOff.has(claseTema(i).label)) s.add(i);
+    });
+    // el edificio se ve si al menos una de sus unidades queda
+    for(const [m, hs] of S.hijasDe) if(hs.some(u => s.has(u))) s.add(m);
     cruzar(s);
   }
 
@@ -981,6 +1198,11 @@ function pintarChips(){
   for(const v of f.entrega) chip(ETQ[v], () => quitar('entrega', v));
   if(f.manzana) chip('Manzana <b>' + f.manzana + '</b>',
                      () => quitar('manzana', null));
+  if(S.eco && S.temaOff.size){
+    chip('<b>' + TEMAS[S.tema].label + '</b> · ' + S.temaOff.size
+         + (S.temaOff.size === 1 ? ' categoría oculta' : ' categorías ocultas'),
+         () => { S.temaOff.clear(); pintarLeyendaTema(); aplicarFiltros(); });
+  }
   if(S.filtroEdificio){
     chip('Unidades del edificio', () => {
       S.filtroEdificio = null;
@@ -990,7 +1212,8 @@ function pintarChips(){
 
   // el boton de limpiar vive fijo en el panel: solo se habilita
   const hay = !!(f.uit.size || f.barrio.size || f.entrega.size
-                 || f.manzana || S.filtroEdificio);
+                 || f.manzana || S.filtroEdificio
+                 || (S.eco && S.temaOff.size));
   const b = document.getElementById('b-limpiar');
   if(b) b.disabled = !hay;
 }
@@ -1001,6 +1224,7 @@ function limpiarFiltros(){
   S.filtros.barrio.clear();
   S.filtros.entrega.clear();
   S.filtros.manzana = '';
+  if(S.eco){ S.temaOff.clear(); pintarLeyendaTema(); }
   document.getElementById('q').value = '';
   for(const id of ['f-uit', 'f-barrio', 'f-entrega']){
     for(const el of document.getElementById(id).children){
@@ -1032,6 +1256,7 @@ function resaltarZonasFiltradas(){
 }
 
 function actualizarResumenFiltrado(){
+  if(S.eco) pintarCondicion();
   const avance = document.getElementById('resultado');
   const corto  = document.getElementById('resumen-filtro');
 
@@ -1043,24 +1268,30 @@ function actualizarResumenFiltrado(){
   }
 
   const cuenta = {}, etapas = {};
+  let total = 0;
   for(const i of S.visibles){
+    // en el portal economico las matrices PH no son predios
+    if(S.eco && S.esMatriz.has(i)) continue;
+    total++;
     const fila = S.tabla.filas[i];
     const e = S.val(fila, 'estado');
     cuenta[e] = (cuenta[e] || 0) + 1;
     const et = S.val(fila, 'etapa');
     if(et) etapas[et] = (etapas[et] || 0) + 1;
   }
-  const total = S.visibles.size;
   const pc = n => pf(total ? n / total * 100 : 0);
-  const ent = cuenta.ENTREGADO || 0;
+  const clave0 = (S.resumen.claves_entregado || ['ENTREGADO'])[0];
+  const ent = cuenta[clave0] || 0;
+  const etqEnt = S.eco ? ((ESTADOS[clave0] || {}).label || clave0) : 'Entregados';
 
   // en el panel de filtros solo el titular, con un enlace al detalle
   corto.innerHTML =
     '<div><b style="font-size:17px;color:var(--texto)" class="mono">'
     + nf(total) + '</b> predios</div>'
-    + '<div style="margin-top:2px">Entregados <b class="mono">' + nf(ent)
+    + '<div style="margin-top:2px">' + etqEnt + ' <b class="mono">' + nf(ent)
     + '</b> · <b style="color:var(--entregado)">' + pc(ent) + ' %</b></div>'
-    + '<button class="ver">Ver detalle en Avance &rsaquo;</button>';
+    + '<button class="ver">Ver detalle en ' + (S.eco ? 'Resumen' : 'Avance')
+    + ' &rsaquo;</button>';
   corto.querySelector('.ver').onclick = () => abrirCajon('cabecera');
 
   // el desglose completo va en el panel de Avance, junto a los totales
@@ -1251,7 +1482,7 @@ function _redibujar(){
     const p = it.p;
     if(S.ocultos.has(p.e)) continue;
     const dentro = !hayFiltro || S.visibles.has(p.i);
-    const col = (ESTADOS[p.e] || {}).color || '#888';
+    const col = S.eco ? colorPunto(p) : ((ESTADOS[p.e] || {}).color || '#888');
 
     L.circleMarker([p.y,p.x],{
       renderer:lienzo, pane:'pts',
@@ -1306,8 +1537,11 @@ map.on('mousemove', e => {
     }
     const fila = S.tabla.filas[p.i];
     const est = S.val(fila,'estado');
+    const etq = (S.eco && S.tema !== 'estado')
+      ? (p.m ? 'Edificio PH' : claseTema(p.i).label)
+      : ((ESTADOS[est]||{}).label || est);
     tt.innerHTML = '<div class="mono">' + fila[S.col.npn] + '</div>'
-      + '<div class="e">' + ((ESTADOS[est]||{}).label || est) + '</div>';
+      + '<div class="e">' + etq + '</div>';
     tt.style.display = 'block';
     tt.style.left = (e.containerPoint.x + 14) + 'px';
     tt.style.top  = (e.containerPoint.y + 14) + 'px';
@@ -1329,6 +1563,7 @@ document.getElementById('mapa').addEventListener('mouseleave', ocultarTooltip);
 
 map.on('click', e => {
   ocultarTooltip();
+  if(S.modo360) return consultar360(e.latlng);
   // 1) el punto del predio tiene prioridad: es el objetivo mas pequeno
   const p = puntoEn(e.latlng, e.containerPoint);
   if(p) return abrirFicha(p.i);
@@ -1430,7 +1665,9 @@ function inicializarPoligonos(){
       renderer: L.canvas({pane:'poli', padding:.2}),
       interactive:false,   // el clic se resuelve con un solo listener
       style: f => {
-        const e = est['*'] || est[String(f.properties.c)] || est['1'];
+        // el campo que decide el estilo lo declara el corte ('c' por defecto)
+        const e = est['*'] || est[String(f.properties[c.campo || 'c'])]
+                  || est['1'] || est[Object.keys(est)[0]];
         return {
           color: e.color,
           weight: e.weight || 1,
@@ -1796,11 +2033,11 @@ function unidadesDe(npn){
   const iN = S.col.npn;
   const fuera = [];
 
-  S.tabla.filas.forEach(f => {
+  S.tabla.filas.forEach((f, k) => {
     const n = f[iN];
     if(!n || n.length !== 30 || n.slice(0, 22) !== raiz) return;
     if(n.slice(22) === '00000000') return;       // la matriz no
-    fuera.push([n, S.val(f, 'estado')]);
+    fuera.push([n, S.val(f, 'estado'), k]);
   });
 
   fuera.sort((a, b) => a[0] < b[0] ? -1 : 1);
@@ -1886,6 +2123,7 @@ function avisoSinPunto(){
 function abrirFicha(i, desdeConstruccion){
   const fila = S.tabla.filas[i];
   if(!fila) return;
+  cerrarVistas();
   S.seleccion = i;
   if(!desdeConstruccion){
     S.selTipo = 'predio';
@@ -1922,6 +2160,30 @@ function abrirFicha(i, desdeConstruccion){
     });
   }
 
+  if(S.eco){
+    pintarFicha({
+      rotulo: uds.length ? 'Predio · edificio PH' : 'Predio',
+      titulo:fila[S.col.npn],
+      acento:info.color,
+      chip:{texto:info.label, color:info.color},
+      destacados:destacadosEco(i),
+      grupos:[
+        {titulo:'Ubicación', color:'#4cc2ff',
+         filas:filasDe(S.tabla, i, null, ['uit','barrio'])
+                .concat(filasDe(S.ficha, i, null, ['manzana','tipo']))}
+      ].concat(gruposEco(i), uds.length ? [{
+        titulo:'Unidades del edificio · ' + nf(uds.length),
+        color:info.color,
+        filas:filasUnidadesEco(uds),
+        abierto:true,
+        accion:{texto:'Ver todas en la tabla', npn:npnEste}
+      }] : [])
+    }, 'f');
+    acomodarFichas();
+    marcarFilaTabla(i);
+    return;
+  }
+
   pintarFicha({
     rotulo: uds.length ? 'Predio · edificio PH' : 'Predio',
     titulo:fila[S.col.npn],
@@ -1955,6 +2217,12 @@ function cerrarFicha(){
   marcarFilaTabla(null);
 }
 document.getElementById('f-cerrar').onclick = cerrarFicha;
+
+// en la lista de unidades de un edificio, cada unidad abre su ficha
+document.getElementById('f-cuerpo').addEventListener('click', e => {
+  const a = e.target.closest('[data-ir]');
+  if(a) abrirFicha(+a.dataset.ir);
+});
 
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape') return;
@@ -2138,6 +2406,7 @@ function pintarEncabezadoTabla(){
 
 function pintarTabla(){
   if(!document.getElementById('gaveta').classList.contains('abierta')) return;
+  if(S.eco && S.vista === 'pivote') return pintarPivote();
 
   let base;
   if(S.ambito === 'vis' && map.getZoom() >= CFG.zoomPuntos){
@@ -2153,10 +2422,13 @@ function pintarTabla(){
   if(S.ocultos.size){
     base = base.filter(i => !S.ocultos.has(S.val(S.tabla.filas[i],'estado')));
   }
+  // en el portal economico las matrices PH no son predios: sus unidades si
+  if(S.eco) base = base.filter(i => !S.esMatriz.has(i));
 
   const k = S.orden.campo, dir = S.orden.asc ? 1 : -1;
+  const get = S.eco ? (i => valorCampo(i, k)) : (i => S.val(S.tabla.filas[i], k));
   base.sort((a,b) => {
-    const va = S.val(S.tabla.filas[a], k), vb = S.val(S.tabla.filas[b], k);
+    const va = get(a), vb = get(b);
     const xa = va === null || va === undefined ? '' : va;
     const xb = vb === null || vb === undefined ? '' : vb;
     return xa < xb ? -dir : (xa > xb ? dir : 0);
@@ -2178,6 +2450,7 @@ function pintarTabla(){
 scroll.addEventListener('scroll', () => requestAnimationFrame(render));
 
 function render(){
+  if(S.eco) return renderEco();
   const alto = CFG.filaAlto;
   const total = listaTabla.length;
   const desde = Math.max(0, Math.floor(scroll.scrollTop / alto) - 6);
@@ -2262,9 +2535,11 @@ function abrirGaveta(){
   document.documentElement.style.setProperty('--gaveta','290px');
   setTimeout(() => map.invalidateSize(), 240);
   pintarTabla();
+  if(S.eco && S.vista === 'pivote') altoGaveta(altoPivote());
 }
 function cerrarGaveta(){
   gaveta.classList.remove('abierta');
+  gaveta.style.height = '';
   document.getElementById('b-tabla').classList.remove('on');
   moverEscala(0);
   document.documentElement.style.setProperty('--gaveta','0px');
@@ -2290,6 +2565,7 @@ document.getElementById('g-vis').onclick = function(){
 };
 
 document.getElementById('g-csv').onclick = () => {
+  if(S.eco) return S.vista === 'pivote' ? csvPivote() : csvEco();
   const cab = COLS.map(k => (S.tabla.campos.find(c => c.key === k) || {label:k}).label);
   const lin = [cab.join(';')];
   for(const i of listaTabla){
@@ -2338,7 +2614,8 @@ const EST_ZONA = {
   perimetro:{color:'#ff2d55', weight:2.4, opacity:.95, fillOpacity:0,
              dashArray:'10,6'},
   uit:      {color:'#ff8c1a', weight:2.2, opacity:.95, fillOpacity:.05},
-  barrios:  {color:'#ffd166', weight:1.7, opacity:.85, fillOpacity:.05}
+  barrios:  {color:'#ffd166', weight:1.7, opacity:.85, fillOpacity:.05},
+  comunas:  {color:'#000000', weight:2.6, opacity:1, fillOpacity:0}
 };
 
 async function cargarZonas(){
@@ -2349,7 +2626,10 @@ async function cargarZonas(){
     {a:'contexto/uit.geojson', l:'Unidades de intervención', k:'uit',
      campo:'Nombre', on:true, filtro:'uit'},
     {a:'contexto/barrios.geojson', l:'Barrios', k:'barrios',
-     campo:'NOMBRE', on:true, filtro:'barrio'}
+     campo:'NOMBRE', on:true, filtro:'barrio'},
+    // solo si el corte trae comunas: el numero va fijo sobre el mapa
+    {a:'contexto/comunas.geojson', l:'Comunas', k:'comunas', on:true,
+     rotulo:true}
   ];
 
   for(const d of defs){
@@ -2362,6 +2642,26 @@ async function cargarZonas(){
       const h = L.geoJSON(geo,{pane:'zonas', interactive:false,
         style:{color:est.halo, weight:est.weight + 3, opacity:.45, fillOpacity:0}});
       if(d.on) h.addTo(map);
+    }
+
+    if(d.rotulo){
+      // el rotulo es el unico atributo que el exportador deja en la capa
+      const capa = L.geoJSON(geo,{
+        pane:'zonas', interactive:false,
+        style:{color:est.color, weight:est.weight, opacity:est.opacity,
+               fillOpacity:0},
+        onEachFeature:(f,l) => {
+          const pr = f.properties || {};
+          const v = pr[Object.keys(pr)[0]];
+          if(v === null || v === undefined || v === '') return;
+          l.bindTooltip(String(v), {permanent:true, direction:'center',
+                                    className:'rotulo-comuna'});
+        }
+      });
+      if(d.on) capa.addTo(map);
+      cont.appendChild(filaCapa(d.l, est.color, capa, d.on,
+                                geo.features ? geo.features.length : null));
+      continue;
     }
 
     const capa = L.geoJSON(geo,{
@@ -2516,6 +2816,1378 @@ async function cargarCalidad(){
   }
 
   det.hidden = (n === 0);
+}
+
+/* ══════════ MODULO ECONOMICO ══════════
+
+   Todo lo de aqui abajo solo corre si el corte trae economico.json
+   (resumen.economico). El geoportal de avance no lo usa.
+
+   Los campos, sus grupos en la ficha, cuales van en la tabla y cuales
+   sirven para agrupar los declara el propio archivo: agregar un campo
+   en la configuracion del exportador lo muestra aqui sin tocar codigo. */
+
+const COLOR_PH = '#e2e8f0';
+const COLOR_SIN_DATO = '#7c8b99';
+const PALETA = ['#38bdf8','#f97316','#22c55e','#f43f5e','#a78bfa','#facc15',
+                '#14b8a6','#ec4899','#84cc16','#fb7185','#60a5fa','#eab308'];
+
+const TEMAS = {
+  estado:  {label:'Liquidación'},
+  var_pct: {label:'Variación del avalúo', rangos:[
+    // escala de calor: verde lo que menos sube, rojo lo que mas
+    {hasta:0,        label:'< 0 %',       color:'#1a9850'},
+    {hasta:50,       label:'0 – 50 %',    color:'#91cf60'},
+    {hasta:100,      label:'50 – 100 %',  color:'#d9ef8b'},
+    {hasta:200,      label:'100 – 200 %', color:'#fee08b'},
+    {hasta:500,      label:'200 – 500 %', color:'#fc8d59'},
+    {hasta:Infinity, label:'> 500 %',     color:'#d73027'}
+  ], sinBase:{label:'Sin avalúo anterior', color:'#a78bfa'}},
+  novedad: {label:'Novedad de liquidación'},
+  tope:    {label:'Tipo de tope', colores:{
+    'Sin tope':'#38bdf8', 'Tope doble':'#f97316',
+    'Tope IPC':'#22c55e', 'Otro':'#f43f5e'}}
+};
+const SIN_DATO = {label:'Sin dato', color:COLOR_SIN_DATO};
+
+function campoEco(k){ return S.eco.campos[S.ecoCol[k]]; }
+
+function ecoVal(i, key){
+  const j = S.ecoCol[key];
+  if(j === undefined) return null;
+  const f = S.eco.filas[i];
+  if(!f) return null;
+  const v = f[j];
+  if(v === null || v === undefined) return null;
+  const cat = S.eco.catalogo[key];
+  return cat ? cat[v] : v;
+}
+
+function fichaVal(i, key){
+  const j = S.fichaCol[key];
+  if(j === undefined || !S.ficha) return null;
+  const v = S.ficha.filas[i] ? S.ficha.filas[i][j] : null;
+  if(v === null || v === undefined) return null;
+  const cat = S.ficha.catalogo || {};
+  return cat[key] ? cat[key][v] : v;
+}
+
+/* valor de cualquier campo publicado, venga del archivo que venga */
+function valorCampo(i, key){
+  if(key === 'npn') return S.tabla.filas[i][S.col.npn];
+  if(key === 'rango_var') return claseVar(i).label;
+  if(key === 'condicion') return condicionDe(S.tabla.filas[i][S.col.npn]);
+  if(S.col[key] !== undefined) return S.val(S.tabla.filas[i], key);
+  if(S.ecoCol[key] !== undefined) return ecoVal(i, key);
+  return fichaVal(i, key);
+}
+
+function textoEco(c, v){
+  if(v === null || v === undefined || v === '') return null;
+  if(c.tipo === 'num'){
+    const t = fmt(v, c.dec || 0);
+    return c.moneda ? '$ ' + t : t;
+  }
+  return String(v);
+}
+
+function prepararEconomico(){
+  S.eco.campos.forEach((c, j) => S.ecoCol[c.key] = j);
+  if(S.ficha) S.ficha.campos.forEach((c, j) => S.fichaCol[c.key] = j);
+
+  // matrices PH: solo aportan el lote, no cuentan en tablas ni totales
+  const iN = S.col.npn;
+  S.tabla.filas.forEach(f => {
+    const n = f[iN];
+    if(!n || n.length !== 30 || n[21] < '8' || n.slice(22) === '00000000') return;
+    const k = indiceDe(n.slice(0, 22) + '00000000');
+    if(k === undefined) return;
+    // si la matriz tiene liquidacion propia, cuenta como un predio mas
+    if(!(S.eco.filas[k] || []).some(v => v !== null)) S.esMatriz.add(k);
+    if(!S.hijasDe.has(k)) S.hijasDe.set(k, []);
+    S.hijasDe.get(k).push(indiceDe(n));
+  });
+
+  // textos del panel: aqui no hay avance sino liquidacion
+  document.querySelector('#cabecera h1').textContent =
+    S.resumen.modo_label || 'Avalúos';
+  document.querySelector('#cabecera .cifra-pie').textContent =
+    'predios con liquidación';
+  const bc = document.querySelector('#barra button[data-cajon="cabecera"]');
+  bc.dataset.tip = 'Resumen';
+  bc.setAttribute('aria-label', 'Resumen');
+  document.title = (S.resumen.modo_label || 'Geoportal') + ' · Valledupar';
+  const fe = document.getElementById('f-entrega');
+  if(fe) fe.closest('.campo').style.display = 'none';
+  document.getElementById('cond-wrap').hidden = false;
+  pintarCondicion();
+
+  // tabla de predios: las columnas economicas que el corte marca
+  const extra = S.eco.campos.filter(c => c.tabla).map(c => c.key);
+  COLS = ['npn', 'barrio', 'uit', 'estado'].filter(k => S.col[k] !== undefined)
+         .concat(extra);
+  ANCHOS.npn = '22%'; ANCHOS.barrio = '15%'; ANCHOS.uit = '8%';
+  ANCHOS.estado = '13%';
+  for(const k of extra){
+    ANCHOS[k] = (42 / Math.max(extra.length, 1)).toFixed(1) + '%';
+  }
+  for(const k of extra){
+    // el encabezado de la tabla busca la etiqueta en tabla.json
+    if(!S.tabla.campos.find(c => c.key === k))
+      S.tabla.campos.push({key:k, label:campoEco(k).label, _eco:true});
+  }
+
+  // selector de tematico
+  const sel = document.getElementById('tema');
+  for(const k in TEMAS){
+    if(k !== 'estado' && S.ecoCol[k] === undefined) continue;
+    const o = document.createElement('option');
+    o.value = k; o.textContent = TEMAS[k].label;
+    sel.appendChild(o);
+  }
+  // el portal economico abre coloreado por variacion del avaluo
+  if(S.ecoCol.var_pct !== undefined){ S.tema = 'var_pct'; sel.value = 'var_pct'; }
+  sel.onchange = () => {
+    S.tema = sel.value; S.clases = null;
+    const habia = S.temaOff.size > 0;
+    S.temaOff.clear();
+    pintarLeyendaTema();
+    habia ? aplicarFiltros() : redibujar();
+  };
+  document.getElementById('tema-wrap').hidden = false;
+  pintarLeyendaTema();
+
+  // la gaveta tiene dos vistas: la tabla de predios y la dinamica
+  document.getElementById('g-vista').hidden = false;
+  document.getElementById('g-tit').style.display = 'none';
+  for(const b of document.querySelectorAll('#g-vista button')){
+    b.onclick = () => {
+      S.vista = b.dataset.v;
+      for(const x of document.querySelectorAll('#g-vista button'))
+        x.classList.toggle('on', x === b);
+      document.getElementById('scroll').hidden = S.vista !== 'predios';
+      document.getElementById('pivote').hidden = S.vista !== 'pivote';
+      if(gaveta.classList.contains('abierta'))
+        altoGaveta(S.vista === 'pivote' ? altoPivote() : 290);
+      pintarTabla();
+    };
+  }
+  prepararPivote();
+}
+
+/* ── condicion del predio: posicion 22 del NPN ── */
+
+const CONDICION = {
+  '0':'No reglamentado en PH (NPH)',
+  '9':'Propiedad horizontal (PH)',
+  '8':'Condominio',
+  '7':'Parques cementerios',
+  '4':'Vías',
+  '3':'Bienes de uso público (no vías)',
+  '2':'Informal',
+  '5':'Mejora'
+};
+// orden de la tabla oficial (un objeto con claves numericas se ordena solo)
+const ORDEN_CONDICION = ['0', '9', '8', '7', '4', '3', '2', '5'].map(k => CONDICION[k]);
+
+function condicionDe(npn){
+  if(!npn || String(npn).length !== 30) return null;
+  return CONDICION[String(npn)[21]] || null;
+}
+
+/* conteo por condicion de lo que esta filtrado (sin matrices PH) */
+function pintarCondicion(){
+  const cuenta = {}, liq = {};
+  const base = S.visibles === null ? S.tabla.filas.map((_, i) => i)
+                                   : Array.from(S.visibles);
+  let tn = 0, tl = 0;
+  for(const i of base){
+    if(S.esMatriz.has(i)) continue;
+    const f = S.tabla.filas[i];
+    const c = condicionDe(f[S.col.npn]) || 'Código no válido';
+    cuenta[c] = (cuenta[c] || 0) + 1;
+    tn++;
+    if(S.val(f, 'estado') === 'CON_LIQUIDACION'){
+      liq[c] = (liq[c] || 0) + 1;
+      tl++;
+    }
+  }
+  let h = '';
+  for(const c of ORDEN_CONDICION.concat(['Código no válido'])){
+    if(!cuenta[c]) continue;
+    h += '<tr><td>' + c + '</td><td class="mono">' + nf(cuenta[c]) + '</td>'
+       + '<td class="mono">' + nf(liq[c] || 0) + '</td></tr>';
+  }
+  h += '<tr style="font-weight:600"><td>Total</td><td class="mono">' + nf(tn)
+     + '</td><td class="mono">' + nf(tl) + '</td></tr>';
+  document.getElementById('cond').innerHTML = h;
+}
+
+/* ── tematico ── */
+
+function claseVar(i){
+  const T = TEMAS.var_pct;
+  const v = ecoVal(i, 'var_pct');
+  if(v === null) return SIN_DATO;
+  const ant = ecoVal(i, 'avaluo_ant');
+  if(!ant) return T.sinBase;
+  for(const r of T.rangos) if(v < r.hasta) return r;
+  return T.rangos[T.rangos.length - 1];
+}
+
+function claseTema(i){
+  const k = S.tema;
+  if(k === 'var_pct') return claseVar(i);
+  const v = ecoVal(i, k);
+  if(v === null) return SIN_DATO;
+  const T = TEMAS[k] || {};
+  const cat = S.eco.catalogo[k] || [];
+  const color = (T.colores && T.colores[v])
+                || PALETA[Math.max(0, cat.indexOf(v)) % PALETA.length];
+  return {label:v, color:color};
+}
+
+function colorPunto(p){
+  if(S.tema === 'estado') return (ESTADOS[p.e] || {}).color || '#888';
+  if(p.m) return COLOR_PH;
+  return claseTema(p.i).color;
+}
+
+function pintarLeyendaTema(){
+  const cont = document.getElementById('leyenda-tema');
+  cont.innerHTML = '';
+  if(S.tema === 'estado') return;     // la leyenda de liquidacion ya esta en Resumen
+
+  const cuenta = new Map();
+  S.tabla.filas.forEach((f, i) => {
+    if(S.esMatriz.has(i)) return;
+    const c = claseTema(i);
+    const r = cuenta.get(c.label) || {c:c, n:0};
+    r.n++;
+    cuenta.set(c.label, r);
+  });
+
+  let orden;
+  if(S.tema === 'var_pct'){
+    const T = TEMAS.var_pct;
+    orden = T.rangos.concat([T.sinBase, SIN_DATO]);
+  }else{
+    orden = [...cuenta.values()].map(r => r.c)
+            .filter(c => c !== SIN_DATO)
+            .sort((a, b) => cuenta.get(b.label).n - cuenta.get(a.label).n);
+    orden.push(SIN_DATO);
+  }
+  orden.push({label:'Edificio PH', color:COLOR_PH, ph:true});
+
+  const pista = document.createElement('div');
+  pista.className = 'pista';
+  pista.style.margin = '0 0 4px';
+  pista.textContent = 'Clic en una categoría para ocultarla o mostrarla';
+  cont.appendChild(pista);
+
+  for(const c of orden){
+    const r = cuenta.get(c.label);
+    if(!r && !c.ph) continue;
+    const d = document.createElement('div');
+    d.className = 'fila-ley' + (c.ph ? '' : ' clic')
+                + (S.temaOff.has(c.label) ? ' off' : '');
+    if(!c.ph){
+      d.onclick = () => {
+        S.temaOff.has(c.label) ? S.temaOff.delete(c.label) : S.temaOff.add(c.label);
+        d.classList.toggle('off', S.temaOff.has(c.label));
+        aplicarFiltros();
+      };
+    }
+    d.innerHTML = '<span class="pin" style="background:' + c.color + '"></span>'
+      + '<span>' + c.label + '</span>'
+      + '<span class="n mono">' + (c.ph ? nf(S.esMatriz.size) : nf(r.n)) + '</span>';
+    cont.appendChild(d);
+  }
+}
+
+/* ── ficha ── */
+
+function destacadosEco(i){
+  const r = [];
+  for(const c of S.eco.campos){
+    if(!c.destacado) continue;
+    const t = textoEco(c, ecoVal(i, c.key));
+    if(t !== null) r.push([c.label, t]);
+  }
+  return r.slice(0, 3);
+}
+
+function gruposEco(i){
+  const orden = [], por = {};
+  for(const c of S.eco.campos){
+    const g = c.grupo || 'Otros';
+    if(!por[g]){ por[g] = []; orden.push(g); }
+    const t = textoEco(c, ecoVal(i, c.key));
+    if(t !== null) por[g].push([c.label, t]);
+  }
+  const colores = ['#22c55e', '#f97316', '#a78bfa', '#f43f5e', '#38bdf8'];
+  return orden.map((g, n) => ({titulo:g, color:colores[n % colores.length],
+                               filas:por[g]}));
+}
+
+/* unidades del edificio con su avaluo; cada una abre su propia ficha */
+function filasUnidadesEco(lista){
+  const k = S.eco.campos.find(c => c.destacado) || S.eco.campos[0];
+  const filas = lista.slice(0, UNIDADES_EN_FICHA).map(([n, est, i]) => {
+    const t = textoEco(k, ecoVal(i, k.key));
+    return [
+      '<span class="mono ir" style="font-size:11px" data-ir="' + i + '">…'
+        + n.slice(22) + '</span>',
+      t === null ? '<span style="color:var(--texto-3)">sin liquidación</span>' : t
+    ];
+  });
+  if(lista.length > UNIDADES_EN_FICHA){
+    filas.push([
+      '<span style="color:var(--texto-3)">y ' +
+      nf(lista.length - UNIDADES_EN_FICHA) + ' más</span>', '']);
+  }
+  return filas;
+}
+
+/* ── tabla de predios con columnas economicas ── */
+
+function celdaEco(k, i, f){
+  if(k === 'npn') return '<td class="mono">' + f[S.col.npn] + '</td>';
+  if(k === 'estado'){
+    const est = S.val(f, 'estado');
+    const col = (ESTADOS[est] || {}).color || '#888';
+    return '<td><span class="punto-est" style="background:' + col + '"></span>'
+      + ((ESTADOS[est] || {}).label || est || '') + '</td>';
+  }
+  if(S.ecoCol[k] !== undefined){
+    const c = campoEco(k);
+    const t = textoEco(c, ecoVal(i, k));
+    return '<td class="' + (c.tipo === 'num' ? 'mono num' : '') + '">'
+      + (t === null ? '' : t) + '</td>';
+  }
+  return '<td>' + (S.val(f, k) || '') + '</td>';
+}
+
+function renderEco(){
+  const alto = CFG.filaAlto;
+  const total = listaTabla.length;
+  const desde = Math.max(0, Math.floor(scroll.scrollTop / alto) - 6);
+  const hasta = Math.min(total, desde + Math.ceil(scroll.clientHeight / alto) + 12);
+  const arriba = desde * alto;
+  const abajo = Math.max(0, (total - hasta) * alto);
+  const nc = COLS.length;
+
+  let html = arriba ? '<tr style="height:' + arriba + 'px"><td colspan="'
+                      + nc + '"></td></tr>' : '';
+  for(let n = desde; n < hasta; n++){
+    const i = listaTabla[n];
+    const f = S.tabla.filas[i];
+    html += '<tr data-i="' + i + '"' + (i === S.seleccion ? ' class="sel"' : '') + '>'
+      + COLS.map(k => celdaEco(k, i, f)).join('') + '</tr>';
+  }
+  if(abajo) html += '<tr style="height:' + abajo + 'px"><td colspan="'
+                    + nc + '"></td></tr>';
+  tbody.innerHTML = html;
+}
+
+function descargarCsv(lin, nombre){
+  const blob = new Blob(['\uFEFF' + lin.join('\r\n')],
+                        {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = nombre + '_' + S.resumen.corte + '.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+const csvTxt = v => v == null ? '' : String(v).replace(/;/g, ',');
+
+function csvEco(){
+  const cab = COLS.map(k => (S.tabla.campos.find(c => c.key === k) || {label:k}).label);
+  const lin = [cab.join(';')];
+  for(const i of listaTabla){
+    lin.push(COLS.map(k => {
+      let v = valorCampo(i, k);
+      if(k === 'estado') v = (ESTADOS[v] || {}).label || v;
+      return csvTxt(v);
+    }).join(';'));
+  }
+  descargarCsv(lin, 'predios');
+}
+
+/* ══════════ TABLA DINAMICA (tipo Excel) ══════════
+
+   Campos a la izquierda; se arrastran (o se hace clic) a tres zonas:
+     Filas     varios campos, uno dentro de otro, con subtotales
+     Columnas  varios campos, encabezados en varios pisos
+     Valores   varios a la vez, cada uno con su operacion
+   Respeta los filtros y el "Todos / En pantalla" de la gaveta. Las
+   matrices PH no cuentan: sus unidades si.
+   Si la tabla sale muy grande, pregunta antes de dibujarla.          */
+
+const OPS = {suma:'Suma', promedio:'Promedio', min:'Mínimo', max:'Máximo',
+             conteo:'Conteo'};
+const SIN_VALOR = '(sin dato)';
+const LIM_COLS = 60, LIM_FILAS = 3000;
+const SEP = '\u0001', TOT = '\u0002';
+
+function dimensiones(){
+  const d = [];
+  const add = (k, label) => d.push({k, label});
+  if(S.col.uit !== undefined) add('uit', 'UIT');
+  if(S.col.barrio !== undefined) add('barrio', 'Barrio');
+  if(S.fichaCol.manzana !== undefined) add('manzana', 'Manzana');
+  if(S.fichaCol.tipo !== undefined) add('tipo', 'Tipo de predio');
+  add('condicion', 'Condición del predio');
+  add('estado', 'Liquidación');
+  for(const c of S.eco.campos){
+    if(c.tipo === 'dominio' || c.dimension) add(c.key, c.label);
+  }
+  if(S.ecoCol.var_pct !== undefined) add('rango_var', 'Rango de variación');
+  return d;
+}
+
+function valoresPivote(){
+  const v = [{k:'__n', label:'Predios (conteo)'}];
+  for(const c of S.eco.campos){
+    if(c.tipo === 'num' && !c.dimension) v.push({k:c.key, label:c.label});
+  }
+  return v;
+}
+
+function etiquetaCampo(k){
+  return (S.pvDims.find(d => d.k === k) || S.pvVals.find(v => v.k === k)
+          || {label:k}).label;
+}
+
+function etiquetaValor(v){
+  return v.k === '__n' ? 'Predios' : OPS[v.op] + ' de ' + etiquetaCampo(v.k);
+}
+
+/* ── panel de campos y zonas ── */
+
+function prepararPivote(){
+  S.pvDims = dimensiones();
+  S.pvVals = valoresPivote();
+
+  for(const z of document.querySelectorAll('.pv-zona, #pv-campos')){
+    z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('sobre'); });
+    z.addEventListener('dragleave', () => z.classList.remove('sobre'));
+    z.addEventListener('drop', e => {
+      e.preventDefault();
+      z.classList.remove('sobre');
+      let d;
+      try{ d = JSON.parse(e.dataTransfer.getData('text/plain')); }catch(_){ return; }
+      if(!d || !d.k) return;
+      if(z.id === 'pv-campos'){          // devolver a la lista = quitar
+        if(d.desde !== 'campos') quitarDeZona(d.desde, d.idx);
+        return;
+      }
+      soltar(z.dataset.zona, d, e.target);
+    });
+  }
+
+  document.getElementById('pv-exp').onclick = () => {
+    S.pvCerrados.clear(); renderPivote();
+  };
+  document.getElementById('pv-con').onclick = () => {
+    S.pvContraer = true; renderPivote();
+  };
+  document.getElementById('pv-tabla').addEventListener('click', e => {
+    const t = e.target.closest('[data-pk]');
+    if(!t) return;
+    const pk = t.dataset.pk;
+    S.pvCerrados.has(pk) ? S.pvCerrados.delete(pk) : S.pvCerrados.add(pk);
+    renderPivote();
+  });
+
+  pintarCampos();
+  pintarZonas();
+}
+
+function arrastrable(el, datos){
+  el.draggable = true;
+  el.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text/plain', JSON.stringify(datos));
+    e.dataTransfer.effectAllowed = 'move';
+  });
+}
+
+function pintarCampos(){
+  const cont = document.getElementById('pv-campos');
+  cont.innerHTML = '';
+  const usados = new Set(S.pivote.filas.concat(S.pivote.cols,
+                                              S.pivote.filtros.map(f => f.k)));
+  const grupo = (titulo, lista, t) => {
+    const g = document.createElement('div');
+    g.className = 'pv-grupo';
+    g.textContent = titulo;
+    cont.appendChild(g);
+    const l = document.createElement('div');
+    l.className = 'pv-lista';
+    for(const f of lista){
+      const c = document.createElement('span');
+      c.className = 'pv-chip ' + t + (t === 'dim' && usados.has(f.k) ? ' usado' : '');
+      c.textContent = f.label;
+      c.title = t === 'dim' ? 'Clic: agregar a Filas' : 'Clic: agregar a Valores';
+      arrastrable(c, {k:f.k, t:t, desde:'campos'});
+      c.onclick = () => agregarCampo(f.k, t);
+      l.appendChild(c);
+    }
+    cont.appendChild(l);
+  };
+  grupo('Para agrupar', S.pvDims, 'dim');
+  grupo('Para calcular', S.pvVals, 'val');
+}
+
+function pintarZonas(){
+  pintarZonaFiltros();
+  for(const zona of ['filas', 'cols', 'valores']){
+    const el = document.querySelector('.pv-zona[data-zona="' + zona + '"]');
+    el.innerHTML = '';
+    const items = S.pivote[zona];
+    if(!items.length){
+      el.innerHTML = '<div class="pv-vacio">Arrastra campos aquí</div>';
+      continue;
+    }
+    items.forEach((it, idx) => {
+      const esVal = zona === 'valores';
+      const k = esVal ? it.k : it;
+      const c = document.createElement('div');
+      c.className = 'pv-chip ' + (esVal ? 'val' : 'dim');
+      c.dataset.zona = zona;
+      c.dataset.idx = idx;
+      c.innerHTML = '<span class="asa">⋮⋮</span><span>' + etiquetaCampo(k) + '</span>';
+      if(esVal && k !== '__n'){
+        const s = document.createElement('select');
+        s.innerHTML = Object.keys(OPS).map(o => '<option value="' + o + '"'
+          + (o === it.op ? ' selected' : '') + '>' + OPS[o] + '</option>').join('');
+        s.onchange = () => { it.op = s.value; cambioPivote(); };
+        s.draggable = false;
+        s.addEventListener('mousedown', e => e.stopPropagation());
+        c.appendChild(s);
+      }
+      const x = document.createElement('button');
+      x.className = 'x';
+      x.textContent = '×';
+      x.title = 'Quitar';
+      x.onclick = () => quitarDeZona(zona, idx);
+      c.appendChild(x);
+      arrastrable(c, {k:k, t:esVal ? 'val' : 'dim', desde:zona, idx:idx});
+      el.appendChild(c);
+    });
+  }
+}
+
+/* zona Filtros: cada campo abre la lista de sus valores con casillas.
+   Solo afecta a la tabla dinamica, como en Excel. */
+function pintarZonaFiltros(){
+  const el = document.querySelector('.pv-zona[data-zona="filtros"]');
+  el.innerHTML = '';
+  const F = S.pivote.filtros;
+  if(!F.length){
+    el.innerHTML = '<div class="pv-vacio">Arrastra campos aquí</div>';
+    return;
+  }
+  F.forEach((f, idx) => {
+    const vals = valoresDeCampo(f.k);
+    const on = vals.filter(v => !f.off.has(v)).length;
+    const c = document.createElement('div');
+    c.className = 'pv-chip fil';
+    c.dataset.zona = 'filtros';
+    c.dataset.idx = idx;
+    c.innerHTML = '<span class="asa">⋮⋮</span><span>' + etiquetaCampo(f.k) + '</span>'
+      + '<span class="res">' + (f.off.size ? on + ' de ' + vals.length : '(todos)')
+      + '</span>';
+    const ab = document.createElement('button');
+    ab.className = 'abre';
+    ab.textContent = S.pvAbierto === f.k ? '▴' : '▾';
+    ab.title = 'Escoger valores';
+    ab.onclick = () => {
+      S.pvAbierto = S.pvAbierto === f.k ? null : f.k;
+      pintarZonaFiltros();
+    };
+    c.appendChild(ab);
+    const x = document.createElement('button');
+    x.className = 'x';
+    x.textContent = '×';
+    x.title = 'Quitar';
+    x.onclick = () => quitarDeZona('filtros', idx);
+    c.appendChild(x);
+    arrastrable(c, {k:f.k, t:'dim', desde:'filtros', idx:idx});
+    el.appendChild(c);
+
+    if(S.pvAbierto !== f.k) return;
+    const lista = document.createElement('div');
+    lista.className = 'pv-valores';
+    const cuenta = conteoDeCampo(f.k);
+    lista.innerHTML = '<div class="acc"><button data-a="todos">Todos</button>'
+      + '<button data-a="ninguno">Ninguno</button></div>'
+      + vals.map(v => '<label><input type="checkbox" data-v="' + v.replace(/"/g, '&quot;')
+          + '"' + (f.off.has(v) ? '' : ' checked') + '><span>' + v + '</span>'
+          + '<span class="n mono">' + nf(cuenta.get(v) || 0) + '</span></label>').join('');
+    lista.querySelector('[data-a="todos"]').onclick = () => {
+      f.off.clear(); pintarZonaFiltros(); pintarPivote();
+    };
+    lista.querySelector('[data-a="ninguno"]').onclick = () => {
+      for(const v of vals) f.off.add(v);
+      pintarZonaFiltros(); pintarPivote();
+    };
+    for(const chk of lista.querySelectorAll('input')){
+      chk.onchange = () => {
+        const v = chk.dataset.v;
+        chk.checked ? f.off.delete(v) : f.off.add(v);
+        const res = c.querySelector('.res');
+        const n = vals.filter(x => !f.off.has(x)).length;
+        res.textContent = f.off.size ? n + ' de ' + vals.length : '(todos)';
+        pintarPivote();
+      };
+    }
+    el.appendChild(lista);
+  });
+}
+
+/* valores que toma un campo entre los predios actuales, en su orden */
+function conteoDeCampo(k){
+  const m = new Map();
+  for(const i of baseActual()){
+    const v = etiquetaDim(k, valorCampo(i, k));
+    m.set(v, (m.get(v) || 0) + 1);
+  }
+  return m;
+}
+function valoresDeCampo(k){
+  const vals = [...conteoDeCampo(k).keys()];
+  // los apagados se conservan aunque hoy no aparezcan en la seleccion
+  for(const f of S.pivote.filtros) if(f.k === k) for(const v of f.off)
+    if(!vals.includes(v)) vals.push(v);
+  return vals.sort(ordenDe(k));
+}
+
+function agregarCampo(k, t){
+  const P = S.pivote;
+  if(t === 'val'){
+    P.valores.push({k:k, op:k === '__n' ? 'conteo' : 'suma'});
+  }else{
+    if(P.filas.includes(k) || P.cols.includes(k)
+       || P.filtros.some(f => f.k === k)) return;
+    P.filas.push(k);
+  }
+  cambioPivote();
+}
+
+function quitarDeZona(zona, idx){
+  S.pivote[zona].splice(idx, 1);
+  cambioPivote();
+}
+
+/* soltar un campo en una zona, antes del campo sobre el que cae */
+function soltar(zona, d, destino){
+  const P = S.pivote;
+  const esVal = zona === 'valores';
+  if(esVal !== (d.t === 'val')) return;      // agrupar y calcular no se mezclan
+
+  const sobre = destino.closest ? destino.closest('.pv-chip[data-idx]') : null;
+  let pos = (sobre && sobre.dataset.zona === zona) ? +sobre.dataset.idx
+                                                  : P[zona].length;
+  let item;
+  if(esVal){
+    item = d.desde === 'valores' ? P.valores[d.idx]
+                                 : {k:d.k, op:d.k === '__n' ? 'conteo' : 'suma'};
+    if(d.desde === 'valores'){
+      P.valores.splice(d.idx, 1);
+      if(d.idx < pos) pos--;
+    }
+  }else{
+    // si ya estaba como filtro conserva lo que tenia marcado
+    const previo = P.filtros.find(f => f.k === d.k);
+    item = zona === 'filtros' ? (previo || {k:d.k, off:new Set()}) : d.k;
+    // un campo va en una sola zona: filas, columnas o filtros
+    for(const z of ['filas', 'cols', 'filtros']){
+      const j = z === 'filtros' ? P.filtros.findIndex(f => f.k === d.k)
+                                : P[z].indexOf(d.k);
+      if(j < 0) continue;
+      P[z].splice(j, 1);
+      if(z === zona && j < pos) pos--;
+    }
+    if(zona === 'filtros') S.pvAbierto = d.k;
+  }
+  P[zona].splice(Math.max(0, Math.min(pos, P[zona].length)), 0, item);
+  cambioPivote();
+}
+
+function cambioPivote(){
+  S.pvCerrados.clear();
+  if(S.pvAbierto && !S.pivote.filtros.some(f => f.k === S.pvAbierto))
+    S.pvAbierto = null;
+  pintarCampos();
+  pintarZonas();
+  pintarPivote();
+}
+
+/* ── calculo ── */
+
+function etiquetaDim(k, v){
+  if(v === null || v === undefined || v === '') return SIN_VALOR;
+  if(k === 'estado') return (ESTADOS[v] || {}).label || v;
+  return String(v);
+}
+
+function ordenDe(k){
+  const natural = (a, b) => {
+    if(a === SIN_VALOR) return 1;
+    if(b === SIN_VALOR) return -1;
+    return a.localeCompare(b, 'es', {numeric:true});
+  };
+  // los rangos y la liquidacion tienen su propio orden, no el alfabetico
+  let fijo = null;
+  if(k === 'rango_var'){
+    const T = TEMAS.var_pct;
+    fijo = T.rangos.concat([T.sinBase, SIN_DATO]).map(r => r.label);
+  }else if(k === 'estado'){
+    fijo = Object.keys(ESTADOS).map(e => ESTADOS[e].label);
+  }else if(k === 'condicion'){
+    fijo = ORDEN_CONDICION;
+  }else if(k === 'rango_smmlv'){
+    // "≤ 70", "> 70 ≤ 135", "> 1000": de menor a mayor; "No aplica" al final
+    const piso = v => {
+      if(v === 'No aplica') return 1e9;
+      const m = v.match(/>\s*([\d.]+)/);
+      return m ? +m[1] : 0;
+    };
+    return (a, b) => {
+      if(a === SIN_VALOR) return 1;
+      if(b === SIN_VALOR) return -1;
+      return piso(a) - piso(b) || natural(a, b);
+    };
+  }
+  if(!fijo) return natural;
+  const pos = v => { const n = fijo.indexOf(v); return n < 0 ? 999 : n; };
+  return (a, b) => pos(a) - pos(b) || natural(a, b);
+}
+
+/* baseActual: los predios que entran (filtros + ambito, sin matrices) */
+function baseActual(){
+  let base;
+  if(S.ambito === 'vis' && map.getZoom() >= CFG.zoomPuntos){
+    const b = map.getBounds();
+    const set = new Set();
+    for(const it of S.indice.search({minX:b.getWest(), minY:b.getSouth(),
+                                     maxX:b.getEast(), maxY:b.getNorth()})){
+      if(!enFiltro(it.p.i)) continue;
+      set.add(it.p.i);
+      // el punto de un edificio representa a todas sus unidades
+      if(it.p.m){
+        for(const u of (S.hijasDe.get(it.p.i) || [])) if(enFiltro(u)) set.add(u);
+      }
+    }
+    base = [...set];
+  }else{
+    base = S.visibles === null ? S.tabla.filas.map((_, i) => i)
+                               : Array.from(S.visibles);
+  }
+  if(S.ocultos.size){
+    base = base.filter(i => !S.ocultos.has(S.val(S.tabla.filas[i], 'estado')));
+  }
+  return base.filter(i => !S.esMatriz.has(i));
+}
+
+function calcularPivote(){
+  const P = S.pivote;
+  let base = baseActual();
+  const activos = P.filtros.filter(f => f.off.size);
+  if(activos.length){
+    base = base.filter(i => activos.every(
+      f => !f.off.has(etiquetaDim(f.k, valorCampo(i, f.k)))));
+  }
+  const nF = P.filas.length, nC = P.cols.length;
+  const vals = P.valores;
+  const nuevo = () => vals.map(() => ({n:0, s:0, c:0, min:Infinity, max:-Infinity}));
+
+  const grupos = new Map();      // prefijo de fila -> Map(columna -> acumulados)
+  const hijos = new Map();       // prefijo de fila -> Set(etiquetas del nivel siguiente)
+  const colKeys = new Set();
+
+  const acumular = (g, ck, vs) => {
+    let a = g.get(ck);
+    if(!a){ a = nuevo(); g.set(ck, a); }
+    for(let j = 0; j < a.length; j++){
+      const x = a[j];
+      x.n++;
+      const v = vs[j];
+      if(v === null || v === undefined) continue;
+      x.c++; x.s += v;
+      if(v < x.min) x.min = v;
+      if(v > x.max) x.max = v;
+    }
+  };
+
+  for(const i of base){
+    const fl = P.filas.map(k => etiquetaDim(k, valorCampo(i, k)));
+    const ck = nC ? P.cols.map(k => etiquetaDim(k, valorCampo(i, k))).join(SEP) : '';
+    colKeys.add(ck);
+    const vs = vals.map(v => v.k === '__n' ? null : ecoVal(i, v.k));
+
+    for(let L = 0; L <= nF; L++){
+      const pk = L + SEP + fl.slice(0, L).join(SEP);
+      let g = grupos.get(pk);
+      if(!g){ g = new Map(); grupos.set(pk, g); }
+      acumular(g, ck, vs);
+      if(nC) acumular(g, TOT, vs);
+      if(L < nF){
+        if(!hijos.has(pk)) hijos.set(pk, new Set());
+        hijos.get(pk).add(fl[L]);
+      }
+    }
+  }
+
+  // columnas ordenadas nivel por nivel
+  const cmpC = P.cols.map(k => ordenDe(k));
+  const columnas = [...colKeys].map(c => c.split(SEP)).sort((a, b) => {
+    for(let n = 0; n < a.length; n++){
+      const r = cmpC[n](a[n], b[n]);
+      if(r) return r;
+    }
+    return 0;
+  });
+
+  return {grupos, hijos, columnas: nC ? columnas : [], n:base.length,
+          nF, nC, vals: vals.slice(), filas:P.filas.slice(), cols:P.cols.slice()};
+}
+
+/* lineas visibles de la tabla, respetando lo plegado */
+function lineasPivote(r, todas){
+  const out = [];
+  const bajar = (L, etiquetas) => {
+    const pk = L + SEP + etiquetas.join(SEP);
+    const hs = r.hijos.get(pk);
+    if(!hs) return;
+    const orden = [...hs].sort(ordenDe(r.filas[L]));
+    for(const h of orden){
+      const et = etiquetas.concat([h]);
+      const hk = (L + 1) + SEP + et.join(SEP);
+      const hoja = L + 1 === r.nF;
+      out.push({nivel:L + 1, etiqueta:h, etiquetas:et, pk:hk, hoja});
+      if(!hoja && (todas || !S.pvCerrados.has(hk))) bajar(L + 1, et);
+    }
+  };
+  bajar(0, []);
+  return out;
+}
+
+function resultado(a, v){
+  if(!a) return null;
+  if(v.k === '__n') return a.n;
+  switch(v.op){
+    case 'suma':     return a.c ? a.s : null;
+    case 'promedio': return a.c ? a.s / a.c : null;
+    case 'min':      return a.c ? a.min : null;
+    case 'max':      return a.c ? a.max : null;
+    case 'conteo':   return a.c;
+  }
+  return null;
+}
+
+function textoPivote(x, v){
+  if(x === null || x === undefined) return '';
+  if(v.k === '__n' || v.op === 'conteo') return fmt(x, 0);
+  const c = campoEco(v.k);
+  const dec = v.op === 'promedio' ? Math.max(c.dec || 0, 1) : (c.dec || 0);
+  const t = fmt(x, dec);
+  return c.moneda ? '$ ' + t : t;
+}
+
+/* ── dibujo ── */
+
+function pintarPivote(){
+  S.ultimoPivote = calcularPivote();
+  renderPivote();
+}
+
+function renderPivote(){
+  const r = S.ultimoPivote;
+  if(!r) return;
+  const tabla = document.getElementById('pv-tabla');
+  const nota = document.getElementById('pv-nota');
+  document.getElementById('g-cuenta').textContent = nf(r.n) + ' predios';
+
+  if(!r.vals.length){
+    tabla.innerHTML = '<tbody><tr><td class="pv-grande" style="text-align:left">'
+      + 'Arrastra al menos un campo a <b>Valores</b>.</td></tr></tbody>';
+    nota.textContent = '';
+    return;
+  }
+
+  if(S.pvContraer){
+    S.pvContraer = false;
+    for(const pk of r.hijos.keys()){
+      const L = +pk.split(SEP)[0];
+      if(L >= 1 && L < r.nF) S.pvCerrados.add(pk);
+    }
+  }
+
+  const lineas = lineasPivote(r, false);
+  const nV = r.vals.length;
+  const nCol = r.nC ? (r.columnas.length + 1) * nV : nV;
+
+  // tabla grande: se pregunta antes de dibujarla
+  const firma = JSON.stringify([S.pivote, S.pvCerrados.size],
+                               (k, v) => v instanceof Set ? [...v] : v);
+  if((nCol > LIM_COLS || lineas.length > LIM_FILAS) && S.pvAprobado !== firma){
+    tabla.innerHTML = '<tbody><tr><td class="pv-grande" style="text-align:left">'
+      + 'Esta tabla tiene <b>' + nf(lineas.length) + ' filas</b> y <b>'
+      + nf(nCol) + ' columnas</b> de valores. Puede ponerse lenta y difícil de leer.'
+      + '<br>Puedes quitar campos, usar los filtros o plegar niveles con '
+      + '«Contraer todo».<br><br>'
+      + '<button class="btn" id="pv-igual">Dibujarla de todos modos</button>'
+      + '</td></tr></tbody>';
+    nota.textContent = '';
+    document.getElementById('pv-igual').onclick = () => {
+      S.pvAprobado = firma;
+      renderPivote();
+    };
+    return;
+  }
+
+  nota.textContent = r.nF > 1 ? 'Clic en ▸ / ▾ para plegar o desplegar' : '';
+
+  const ALTO = 27;
+  const pisos = r.nC + 1;                         // niveles de columna + fila de valores
+  const esq = r.filas.map(etiquetaCampo).join(' ▸ ') || '';
+  let h = '<thead>';
+
+  if(r.nC){
+    for(let n = 0; n < r.nC; n++){
+      h += '<tr>';
+      if(n === 0){
+        h += '<th class="esq" rowspan="' + pisos + '" style="top:0">'
+           + esq + '</th>';
+      }
+      // agrupar columnas consecutivas con el mismo prefijo
+      let k = 0;
+      while(k < r.columnas.length){
+        const pre = r.columnas[k].slice(0, n + 1).join(SEP);
+        let fin = k;
+        while(fin + 1 < r.columnas.length
+              && r.columnas[fin + 1].slice(0, n + 1).join(SEP) === pre) fin++;
+        h += '<th colspan="' + ((fin - k + 1) * nV) + '" style="top:'
+           + (n * ALTO) + 'px">' + r.columnas[k][n] + '</th>';
+        k = fin + 1;
+      }
+      if(n === 0){
+        h += '<th class="t" rowspan="' + r.nC + '" colspan="' + nV
+           + '" style="top:0">Total</th>';
+      }
+      h += '</tr>';
+    }
+    h += '<tr>';
+    for(let c = 0; c <= r.columnas.length; c++){
+      for(const v of r.vals){
+        h += '<th class="v' + (c === r.columnas.length ? ' t' : '')
+           + '" style="top:' + (r.nC * ALTO) + 'px">' + etiquetaValor(v) + '</th>';
+      }
+    }
+    h += '</tr>';
+  }else{
+    h += '<tr><th class="esq" style="top:0">' + esq + '</th>'
+       + r.vals.map(v => '<th class="v" style="top:0">' + etiquetaValor(v)
+                         + '</th>').join('') + '</tr>';
+  }
+  h += '</thead><tbody>';
+
+  const celdas = g => {
+    let t = '';
+    if(r.nC){
+      for(const col of r.columnas){
+        const a = g.get(col.join(SEP));
+        r.vals.forEach((v, j) => {
+          t += '<td class="mono">' + textoPivote(resultado(a && a[j], v), v) + '</td>';
+        });
+      }
+      const a = g.get(TOT);
+      r.vals.forEach((v, j) => {
+        t += '<td class="mono t">' + textoPivote(resultado(a && a[j], v), v) + '</td>';
+      });
+    }else{
+      const a = g.get('');
+      r.vals.forEach((v, j) => {
+        t += '<td class="mono">' + textoPivote(resultado(a && a[j], v), v) + '</td>';
+      });
+    }
+    return t;
+  };
+
+  for(const ln of lineas){
+    const g = r.grupos.get(ln.pk);
+    const sangria = 11 + (ln.nivel - 1) * 18;
+    const tog = ln.hoja ? '' : '<span class="pv-tog" data-pk="' + ln.pk + '">'
+      + (S.pvCerrados.has(ln.pk) ? '▸' : '▾') + '</span>';
+    h += '<tr' + (ln.hoja ? '' : ' class="sub"') + '>'
+       + '<td class="lbl" style="padding-left:' + sangria + 'px">' + tog
+       + ln.etiqueta + '</td>' + celdas(g) + '</tr>';
+  }
+  const gT = r.grupos.get(0 + SEP);
+  if(gT){
+    h += '<tr class="tot"><td class="lbl">Total general</td>' + celdas(gT) + '</tr>';
+  }
+  h += '</tbody>';
+  tabla.innerHTML = h;
+}
+
+/* CSV en formato de tabla plana: una columna por campo de fila, para
+   poder seguir trabajandolo en Excel */
+function csvPivote(){
+  const r = S.ultimoPivote || calcularPivote();
+  const num = x => x == null ? '' : String(Math.round(x * 100) / 100).replace('.', ',');
+  const cab = r.filas.map(etiquetaCampo);
+  const colsCsv = r.nC ? r.columnas.map(c => c.join(' / ')).concat(['Total']) : [''];
+  for(const c of colsCsv){
+    for(const v of r.vals) cab.push((c ? c + ' · ' : '') + etiquetaValor(v));
+  }
+  const lin = [cab.map(csvTxt).join(';')];
+
+  const fila = (etiquetas, g) => {
+    const out = etiquetas.map(csvTxt);
+    const claves = r.nC ? r.columnas.map(c => c.join(SEP)).concat([TOT]) : [''];
+    for(const ck of claves){
+      const a = g.get(ck);
+      r.vals.forEach((v, j) => out.push(num(resultado(a && a[j], v))));
+    }
+    return out.join(';');
+  };
+  for(const ln of lineasPivote(r, true)){
+    if(ln.hoja) lin.push(fila(ln.etiquetas, r.grupos.get(ln.pk)));
+  }
+  const gT = r.grupos.get(0 + SEP);
+  if(gT){
+    const et = r.filas.map((_, n) => n === 0 ? 'Total general' : '');
+    lin.push(fila(et.length ? et : ['Total general'], gT));
+  }
+  descargarCsv(lin, 'tabla_dinamica');
+}
+
+function altoPivote(){
+  return Math.max(360, Math.round(window.innerHeight * .55));
+}
+
+function altoGaveta(px){
+  gaveta.style.height = px + 'px';
+  moverEscala(px);
+  document.documentElement.style.setProperty('--gaveta', px + 'px');
+  setTimeout(() => map.invalidateSize(), 240);
+}
+
+/* ══════════ VISTA 360° / 3D ══════════
+
+   Un boton y un panel con dos visores: la foto 360 arriba y el modelo
+   3D abajo. Un clic en el mapa mueve los dos, como el plugin KFields en
+   QGIS. Cada visor aparece solo si el corte lo trae en resumen.json
+   (visor360, visor3d).
+
+   360: se le pregunta a Kasay que foto hay cerca del clic (permitido
+        desde el geoportal); la foto se pide a nuestro servidor, ruta
+        /foto360/, que la trae de Kasay.
+   3D:  el modelo de la UIT donde cae el clic se carga directo del
+        servidor de Falcon con Cesium, la misma libreria que usan ellos.
+   Nada de esto se guarda en el geoportal.                            */
+
+const PANNELLUM = 'https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/';
+const CESIUM = 'https://cdn.jsdelivr.net/npm/cesium@1.105.1/Build/Cesium/';
+let capa360 = null, pannellumListo = null, cesiumListo = null;
+let visor3d = null, modelo3d = null, modeloUrl = null, uitsGeo = null;
+
+function prepararVistas(){
+  const b = document.getElementById('b-360');
+  b.hidden = false;
+  b.onclick = () => modo360(!S.modo360);
+  document.getElementById('sec360').hidden = !S.resumen.visor360;
+  document.getElementById('sec3d').hidden = !S.resumen.visor3d;
+  document.getElementById('p360-cerrar').onclick = cerrarVistas;
+  document.getElementById('p360-grande').onclick = () => {
+    document.getElementById('panel360').classList.toggle('grande');
+    if(S.visor360) setTimeout(() => S.visor360.resize(), 60);
+  };
+  capa360 = L.layerGroup([], {pane:'resalte'}).addTo(map);
+}
+
+function modo360(activo){
+  S.modo360 = activo;
+  document.getElementById('b-360').classList.toggle('on', activo);
+  document.body.classList.toggle('modo360', activo);
+  if(activo) aviso360('clic en el mapa para ver la vista 360° / 3D');
+}
+
+/* mensajes cortos en el indicador de abajo; al terminar vuelve el
+   conteo que habia antes del primer mensaje */
+const mensajes360 = new Set();
+let evisBase = null;
+function aviso360(txt){
+  const e = document.getElementById('e-vis');
+  if(!e) return;
+  if(!mensajes360.has(e.textContent)) evisBase = e.textContent;
+  mensajes360.add(txt);
+  e.textContent = txt;
+  setTimeout(() => { if(e.textContent === txt) e.textContent = evisBase; }, 3200);
+}
+
+/* aviso dentro de cada mitad del panel (null lo quita) */
+function msgVista(cual, txt){
+  const m = document.getElementById(cual === '3d' ? 'msg3d' : 'msg360');
+  m.hidden = !txt;
+  m.textContent = txt || '';
+}
+
+function cargarScript(css, js){
+  return new Promise((ok, mal) => {
+    if(css){
+      const l = document.createElement('link');
+      l.rel = 'stylesheet'; l.href = css;
+      document.head.appendChild(l);
+    }
+    const sc = document.createElement('script');
+    sc.src = js;
+    sc.onload = ok;
+    sc.onerror = () => mal(new Error('no cargó ' + js.split('/').pop()));
+    document.head.appendChild(sc);
+  });
+}
+
+/* las librerias se descargan la primera vez que se usan */
+function cargarPannellum(){
+  if(window.pannellum) return Promise.resolve();
+  if(!pannellumListo){
+    pannellumListo = cargarScript(PANNELLUM + 'pannellum.css', PANNELLUM + 'pannellum.js')
+      .catch(e => { pannellumListo = null; throw e; });
+  }
+  return pannellumListo;
+}
+function cargarCesium(){
+  if(window.Cesium) return Promise.resolve();
+  if(!cesiumListo){
+    window.CESIUM_BASE_URL = CESIUM;
+    cesiumListo = cargarScript(CESIUM + 'Widgets/widgets.css', CESIUM + 'Cesium.js')
+      .catch(e => { cesiumListo = null; throw e; });
+  }
+  return cesiumListo;
+}
+
+function abrirVistas(){
+  // la ficha y la vista 360/3D ocupan el mismo lugar
+  if(S.seleccion !== null) cerrarFicha();
+  document.getElementById('panel360').classList.add('abierto');
+}
+
+function consultar360(latlng){
+  abrirVistas();
+  capa360.clearLayers();
+  cancelAnimationFrame(conoAnim);
+  if(S.resumen.visor360) foto360(latlng);
+  if(S.resumen.visor3d) ir3D(latlng);
+}
+
+/* ── foto 360 ── */
+
+async function foto360(latlng){
+  const C = S.resumen.visor360;
+  msgVista('360', 'Buscando foto…');
+  const url = C.consulta + '?x_coord=' + encodeURIComponent(latlng.lng)
+            + '&y_coord=' + encodeURIComponent(latlng.lat)
+            + '&buffer=' + encodeURIComponent(C.radio_m || 30)
+            + '&src=4326&azimut=0';
+  let txt;
+  try{
+    txt = await (await fetch(url)).text();
+  }catch(err){
+    return msgVista('360', 'No se pudo consultar el servicio 360°.');
+  }
+
+  // la respuesta es un texto con la foto, su punto y hacia donde mira
+  const m = k => { const r = txt.match(k); return r ? r[1] : null; };
+  const foto = m(/photo=(.*?)&direction=/);
+  if(txt.startsWith('error') || !foto){
+    quitar360();
+    return msgVista('360', 'No hay foto 360° a menos de ' + (C.radio_m || 30) + ' m de este punto.');
+  }
+  const yaw = parseFloat(m(/&yaw=(.*?)&long=/)) || 0;
+  const rumbo = parseFloat(m(/&direction=(.*?)&x=/)) || 0;
+  const lon = parseFloat(m(/&long=(.*?)&lat=/));
+  const lat = parseFloat(m(/&lat=([^&]*)/));
+
+  // la foto se pide a nuestro servidor, que la trae de Kasay
+  const pre = C.prefijo_fotos;
+  if(!foto.startsWith(pre)) return msgVista('360', 'La foto no está en la carpeta esperada.');
+  const src = C.proxy + foto.slice(pre.length);
+
+  try{
+    await cargarPannellum();
+  }catch(err){
+    return msgVista('360', 'No cargó el visor 360°.');
+  }
+  msgVista('360', null);
+  document.getElementById('p360-info').textContent = foto.split('/').pop();
+
+  quitar360();
+  S.visor360 = pannellum.viewer('pano', {
+    type:'equirectangular', panorama:src, autoLoad:true,
+    yaw:yaw, pitch:0, showControls:true
+  });
+  S.visor360.on('error', () => msgVista('360', 'No se pudo cargar la foto 360°.'));
+
+  if(isFinite(lat) && isFinite(lon)){
+    // cono: hacia donde se esta mirando en la foto; gira con ella
+    const cono = L.polygon([[lat, lon]], {pane:'resalte', interactive:false,
+      color:'#f97316', weight:1.5, opacity:.9, fillColor:'#f97316',
+      fillOpacity:.28}).addTo(capa360);
+    L.circleMarker([lat, lon], {pane:'resalte', radius:9, color:'#ffffff',
+      weight:2.5, fillColor:'#f97316', fillOpacity:1, interactive:false})
+      .addTo(capa360);
+    seguirCono(cono, lat, lon, rumbo);
+  }
+}
+
+function quitar360(){
+  if(S.visor360){
+    try{ S.visor360.destroy(); }catch(e){}
+    S.visor360 = null;
+  }
+}
+
+/* El centro de la foto (yaw 0) apunta hacia donde iba la camara
+   ('direction' en la respuesta de Kasay). El rumbo en el mapa de lo que
+   se esta viendo es: direction + yaw. La apertura del cono es el campo
+   de vision del visor, que cambia con el zoom.                        */
+const RADIO_CONO_M = 25;
+let conoAnim = null;
+
+function puntoA(lat, lon, rumboGrados, metros){
+  const r = rumboGrados * Math.PI / 180;
+  return [lat + metros * Math.cos(r) / 111320,
+          lon + metros * Math.sin(r) / (111320 * Math.cos(lat * Math.PI / 180))];
+}
+
+function seguirCono(cono, lat, lon, rumbo){
+  cancelAnimationFrame(conoAnim);
+  let ultimo = '';
+  const paso = () => {
+    const v = S.visor360;
+    if(!v) return;
+    const yaw = v.getYaw(), hfov = v.getHfov();
+    const clave = yaw.toFixed(1) + '|' + hfov.toFixed(1);
+    if(clave !== ultimo){
+      ultimo = clave;
+      const centro = rumbo + yaw;
+      const pts = [[lat, lon]];
+      for(let k = 0; k <= 12; k++){
+        pts.push(puntoA(lat, lon, centro - hfov / 2 + hfov * k / 12, RADIO_CONO_M));
+      }
+      cono.setLatLngs(pts);
+    }
+    conoAnim = requestAnimationFrame(paso);
+  };
+  paso();
+}
+
+/* ── modelo 3D ── */
+
+/* en que UIT cae el clic: se usa el numero del nombre (UIT_04 -> "04") */
+async function uitEn(latlng){
+  if(!uitsGeo){
+    uitsGeo = await traer('contexto/uit.geojson', false);
+    if(!uitsGeo) return null;
+  }
+  for(const f of uitsGeo.features || []){
+    if(!f.geometry || !dentroDe(f.geometry, latlng.lng, latlng.lat)) continue;
+    const pr = f.properties || {};
+    const nombre = String(pr[Object.keys(pr)[0]] || '');
+    const n = nombre.match(/\d+/);
+    return n ? {nombre, num:String(parseInt(n[0], 10)).padStart(2, '0')} : {nombre, num:null};
+  }
+  return null;
+}
+
+async function ir3D(latlng){
+  const C = S.resumen.visor3d;
+  L.circleMarker(latlng, {pane:'resalte', radius:6, color:'#ffffff', weight:2,
+    fillColor:'#ef4444', fillOpacity:1, interactive:false}).addTo(capa360);
+
+  const uit = await uitEn(latlng);
+  if(!uit){
+    return msgVista('3d', 'Este punto no está dentro de ninguna UIT: no hay modelo 3D.');
+  }
+  const url = (C.modelos || {})[uit.num];
+  document.getElementById('p3d-info').textContent = uit.nombre;
+  if(!url){
+    return msgVista('3d', 'La UIT ' + uit.nombre + ' no tiene modelo 3D configurado.');
+  }
+
+  msgVista('3d', 'Cargando modelo 3D…');
+  try{
+    await cargarCesium();
+    if(!visor3d){
+      visor3d = new Cesium.Viewer('cesium3d', {
+        imageryProvider:false, baseLayerPicker:false, geocoder:false,
+        homeButton:false, sceneModePicker:false, navigationHelpButton:false,
+        animation:false, timeline:false, fullscreenButton:false,
+        infoBox:false, selectionIndicator:false,
+        terrainProvider:new Cesium.EllipsoidTerrainProvider()
+      });
+      // solo el modelo: sin globo ni mapa base (esos piden llave de Cesium)
+      visor3d.scene.globe.show = false;
+    }
+    if(modeloUrl !== url){
+      if(modelo3d){ visor3d.scene.primitives.remove(modelo3d); modelo3d = null; }
+      modelo3d = await Cesium.Cesium3DTileset.fromUrl(url);
+      visor3d.scene.primitives.add(modelo3d);
+      modeloUrl = url;
+    }
+  }catch(err){
+    modeloUrl = null;
+    return msgVista('3d', 'No se pudo cargar el modelo 3D (' + err.message + ').');
+  }
+  msgVista('3d', null);
+  volar3D(latlng.lat, latlng.lng, C.altura_m || 50);
+}
+
+/* igual que flyToHouse de Falcon: primero encima del punto a la altura
+   del modelo, luego mide la altura real ahi, baja y pone el cono rojo */
+function volar3D(lat, lon, alto){
+  const v = visor3d, ts = modelo3d;
+  const destino = Cesium.Cartesian3.fromDegrees(lon, lat, 0);
+  const centro = ts.boundingSphere.center;
+  if(Cesium.Cartesian3.distance(centro, destino) > ts.boundingSphere.radius * 0.8){
+    v.flyTo(ts);
+    return;
+  }
+  const altoModelo = Cesium.Cartographic.fromCartesian(centro).height;
+  v.camera.flyTo({
+    destination:Cesium.Cartesian3.fromDegrees(lon, lat, altoModelo + alto),
+    duration:2.0,
+    complete:() => setTimeout(() => {
+      let h;
+      try{ h = v.scene.sampleHeight(Cesium.Cartographic.fromDegrees(lon, lat)); }catch(e){}
+      if(!h || h === altoModelo) return;
+      v.entities.removeAll();
+      v.entities.add({
+        position:Cesium.Cartesian3.fromDegrees(lon, lat, h + 15),
+        cylinder:{length:4.0, topRadius:1.0, bottomRadius:0.0,
+                  material:Cesium.Color.RED.withAlpha(0.8), outline:true,
+                  outlineColor:Cesium.Color.WHITE,
+                  heightReference:Cesium.HeightReference.NONE}
+      });
+      v.camera.flyTo({destination:Cesium.Cartesian3.fromDegrees(lon, lat, h + alto),
+                      duration:2.0});
+    }, 500)
+  });
+}
+
+function cerrarVistas(){
+  const p = document.getElementById('panel360');
+  if(!p || !p.classList.contains('abierto')) return;
+  p.classList.remove('abierto', 'grande');
+  quitar360();
+  cancelAnimationFrame(conoAnim);
+  if(visor3d) visor3d.entities.removeAll();
+  if(capa360) capa360.clearLayers();
 }
 
 arrancar();

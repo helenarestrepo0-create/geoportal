@@ -1,21 +1,21 @@
 {
- "corte": "20260922",
+ "corte": "20260925",
  "modo": "inicial_tentativo",
  "modo_label": "Base inicial y entregas · tentativo",
- "generado": "2026-09-22T16:45:08",
+ "generado": "2026-09-25T15:36:48",
  "total": 114567,
  "estados": {
   "ENTREGADO": 68741,
   "EN_PROCESO": 45826
  },
  "etapas": {
-  "geografico": 33709,
-  "reconocimiento": 38724,
-  "juridico": 1633
+  "geografico": 36762,
+  "reconocimiento": 35680,
+  "juridico": 1588
  },
  "tipos": {
   "unidad_ph": 29340,
-  "predio": 92634,
+  "predio": 92631,
   "matriz": 2378
  },
  "entregas": {
@@ -52,7 +52,7 @@
   },
   "UIT_03": {
    "ENTREGADO": 15638,
-   "EN_PROCESO": 4905
+   "EN_PROCESO": 4903
   },
   "UIT_04": {
    "ENTREGADO": 6066,
@@ -68,7 +68,7 @@
   },
   "UIT_07": {
    "ENTREGADO": 7552,
-   "EN_PROCESO": 17435
+   "EN_PROCESO": 17434
   }
  },
  "calidad": {
@@ -80,14 +80,14 @@
   "ph_sin_lote": 0,
   "errores_etapa": 0
  },
- "puntos_en_mapa": 91852,
+ "puntos_en_mapa": 91851,
  "poligonos": {
   "terrenos": {
    "carpeta": "poligonos",
    "piezas": {
     "UIT_05": {
      "archivo": "terrenos_UIT_05.fgb",
-     "n": 24213,
+     "n": 24215,
      "mb": 6.3,
      "caja": [
       -73.271058,
@@ -120,7 +120,7 @@
     },
     "UIT_03": {
      "archivo": "terrenos_UIT_03.fgb",
-     "n": 18650,
+     "n": 18646,
      "mb": 4.8,
      "caja": [
       -73.253189,
@@ -163,7 +163,7 @@
      ]
     }
    },
-   "n": 138925,
+   "n": 138923,
    "zoom_min": 17,
    "label": "Terrenos",
    "estilos": {
@@ -202,7 +202,7 @@
     },
     "UIT_07": {
      "archivo": "construcciones_UIT_07.fgb",
-     "n": 64567,
+     "n": 64547,
      "mb": 17.8,
      "caja": [
       -73.296252,
@@ -213,7 +213,7 @@
     },
     "UIT_03": {
      "archivo": "construcciones_UIT_03.fgb",
-     "n": 35939,
+     "n": 35937,
      "mb": 10.3,
      "caja": [
       -73.252549,
@@ -235,7 +235,7 @@
     },
     "UIT_06": {
      "archivo": "construcciones_UIT_06.fgb",
-     "n": 68129,
+     "n": 68181,
      "mb": 18.8,
      "caja": [
       -73.286356,
@@ -256,7 +256,7 @@
      ]
     }
    },
-   "n": 271621,
+   "n": 271651,
    "zoom_min": 18,
    "label": "Construcciones",
    "estilos": {
@@ -292,10 +292,28 @@
  ],
  "tentativo": true,
  "aoi": [
-  -73.29688,
-  10.422186,
-  -73.216835,
-  10.506197
+  -73.306189,
+  10.411423,
+  -73.201025,
+  10.514986
  ],
+ "visor360": {
+  "consulta": "https://360-valledupar.kasay.com.co/php/info_foto.php",
+  "prefijo_fotos": "/proyecto_streetview/fotos-360/",
+  "proxy": "/foto360/",
+  "radio_m": 30
+ },
+ "visor3d": {
+  "altura_m": 50,
+  "modelos": {
+   "01": "",
+   "02": "",
+   "03": "https://3d.falconprecision.co/valledupar-3/Data/tileset.json",
+   "04": "https://3d.falconprecision.co/valledupar-4/Data/tileset.json",
+   "05": "https://3d.falconprecision.co/valledupar-5/Data/tileset.json",
+   "06": "https://3d.falconprecision.co/valledupar-6/Data/tileset.json",
+   "07": "https://3d.falconprecision.co/valledupar-7/Data/tileset.json"
+  }
+ },
  "opcionales": []
 }
