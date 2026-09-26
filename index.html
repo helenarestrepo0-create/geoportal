@@ -307,6 +307,8 @@ body.arrastrando #pano, body.arrastrando #cesium3d{pointer-events:none}
 #cesium3d .cesium-viewer-bottom{display:none}
 .modo360 #mapa, .modo360 .leaflet-container{cursor:crosshair!important}
 /* botones de la ficha hacia QGIS */
+.fila-qgis{display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer}
+.fila-qgis input{accent-color:var(--foco);margin:0}
 .acc-qgis{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 14px 10px}
 .acc-qgis .btn{padding:4px 10px;font-size:11.5px}
 .acc-qgis .res{flex-basis:100%;font-size:11px;color:var(--texto-2);min-height:0}
@@ -648,6 +650,10 @@ table.tot.cond td + td{padding-left:8px}
     <div id="leyenda-tema"></div>
   </div>
   <div id="lista-capas"></div>
+  <div class="divisor"></div>
+  <label class="fila-qgis"><input type="checkbox" id="chk-qgis"> Conectar con QGIS</label>
+  <div class="pista" style="margin-top:3px">Muestra el botón «Ver en QGIS» en la ficha
+    del predio. Necesita QGIS abierto con el plugin en este computador.</div>
   <details id="det-calidad" hidden>
     <summary>Revisión de calidad</summary>
     <div class="aviso">No cuentan en el avance. Revísalas antes de publicar.</div>
@@ -2182,7 +2188,7 @@ function abrirFicha(i, desdeConstruccion){
       grupos:[
         {titulo:'Ubicación', color:'#4cc2ff',
          filas:filasDe(S.tabla, i, null, ['uit','barrio'])
-                .concat(filasDe(S.ficha, i, null, ['manzana','tipo','proyecto']))}
+                .concat(filasDe(S.ficha, i, null, ['manzana','tipo']))}
       ].concat(gruposEco(i), uds.length ? [{
         titulo:'Unidades del edificio · ' + nf(uds.length),
         color:info.color,
@@ -2211,7 +2217,7 @@ function abrirFicha(i, desdeConstruccion){
        filas:filasDe(S.tabla, i, ['npn','estado','uit','barrio'])},
       {titulo:'Características', color:'#8ea3b6',
        filas:filasDe(S.ficha, i, ['manzana','direccion','area_terr',
-                                  'area_const','n_unid','estado'])}
+                                  'area_const','n_unid','estado','proyecto'])}
     ].concat(grupos)
   }, 'f');
   accionesQGIS(i);
@@ -3915,6 +3921,26 @@ function altoGaveta(px){
 
 const PUERTO_QGIS = 47651;
 
+/* El boton "Ver en QGIS" solo aparece si en este navegador se prendio
+   "Conectar con QGIS" (cajon de Capas). Apagado por defecto: para los
+   demas no existe y el geoportal no intenta hablar con su computador. */
+const CLAVE_QGIS = 'geoportal.qgis';
+function qgisActivo(){
+  try{ return localStorage.getItem(CLAVE_QGIS) === '1'; }catch(e){ return false; }
+}
+(function prepararInterruptorQGIS(){
+  const chk = document.getElementById('chk-qgis');
+  chk.checked = qgisActivo();
+  chk.onchange = () => {
+    try{
+      chk.checked ? localStorage.setItem(CLAVE_QGIS, '1')
+                  : localStorage.removeItem(CLAVE_QGIS);
+    }catch(e){}
+    // si hay una ficha abierta, se vuelve a pintar con o sin el boton
+    if(S.seleccion !== null && S.selTipo === 'predio') abrirFicha(S.seleccion);
+  };
+})();
+
 function accionesQGIS(i){
   const c = document.getElementById('f-cuerpo');
   const npn = S.tabla.filas[i][S.col.npn];
@@ -3938,7 +3964,7 @@ function accionesQGIS(i){
   };
   bar.appendChild(bc);
 
-  if(proyecto){
+  if(proyecto && qgisActivo()){
     const bq = document.createElement('button');
     bq.className = 'btn';
     bq.textContent = 'Ver en QGIS';
@@ -3964,7 +3990,7 @@ async function verEnQGIS(npn, proyecto, boton, res){
     const r = await fetch(url, {signal:ctl.signal});
     clearTimeout(t);
     const j = await r.json();
-    res.textContent = j.msg || 'Enviado a QGIS.';
+    res.textContent = j.ok ? 'Abriendo en QGIS…' : 'No se encontró información.';
   }catch(e){
     res.textContent = 'QGIS no respondió. Ábrelo con el plugin "Geoportal → QGIS" activo.';
   }
