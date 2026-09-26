@@ -277,7 +277,14 @@ label.opc, .opc{
 #panel360.grande{width:calc(100vw - 140px);left:72px;z-index:615;
   height:calc(100vh - var(--gaveta) - 26px)}
 #panel360 .cab{padding:9px 14px;border-bottom:1px solid var(--linea);display:flex;
-  align-items:center;gap:10px;border-left:3px solid #f97316;flex:none}
+  align-items:center;gap:10px;border-left:3px solid #f97316;flex:none;
+  cursor:move;user-select:none;touch-action:none}
+#panel360 .redim{position:absolute;right:0;bottom:0;width:16px;height:16px;
+  cursor:nwse-resize;z-index:20;touch-action:none;
+  background:linear-gradient(135deg, transparent 50%, var(--texto-3) 50%, var(--texto-3) 58%,
+    transparent 58%, transparent 70%, var(--texto-3) 70%, var(--texto-3) 78%, transparent 78%)}
+body.arrastrando, body.arrastrando *{user-select:none!important}
+body.arrastrando #pano, body.arrastrando #cesium3d{pointer-events:none}
 #panel360 .rotulo{font-size:10.5px;color:var(--texto-3);letter-spacing:.04em;
   text-transform:uppercase}
 #panel360 .cerrar{background:none;border:0;color:var(--texto-2);font-size:17px;
@@ -299,6 +306,10 @@ label.opc, .opc{
 #panel360 .msg[hidden]{display:none}
 #cesium3d .cesium-viewer-bottom{display:none}
 .modo360 #mapa, .modo360 .leaflet-container{cursor:crosshair!important}
+/* botones de la ficha hacia QGIS */
+.acc-qgis{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 14px 10px}
+.acc-qgis .btn{padding:4px 10px;font-size:11.5px}
+.acc-qgis .res{flex-basis:100%;font-size:11px;color:var(--texto-2);min-height:0}
 #ficha .cab, #ficha-c .cab{
   padding:11px 14px 11px;border-bottom:1px solid var(--linea);
   display:flex;align-items:flex-start;gap:10px;flex:none;
@@ -675,7 +686,7 @@ table.tot.cond td + td{padding-left:8px}
     <button class="cerrar" id="p360-cerrar" aria-label="Cerrar">×</button>
   </div>
   <div class="sec" id="sec360" hidden>
-    <div class="sec-tit">Foto 360° <span id="p360-info"></span></div>
+    <div class="sec-tit">Foto 360°</div>
     <div id="pano"></div>
     <div class="msg" id="msg360" hidden></div>
   </div>
@@ -684,6 +695,7 @@ table.tot.cond td + td{padding-left:8px}
     <div id="cesium3d"></div>
     <div class="msg" id="msg3d" hidden></div>
   </div>
+  <div class="redim" id="p360-redim" title="Cambiar tamaño"></div>
 </div>
 
 <div class="panel" id="ficha-c">
@@ -2170,7 +2182,7 @@ function abrirFicha(i, desdeConstruccion){
       grupos:[
         {titulo:'Ubicación', color:'#4cc2ff',
          filas:filasDe(S.tabla, i, null, ['uit','barrio'])
-                .concat(filasDe(S.ficha, i, null, ['manzana','tipo']))}
+                .concat(filasDe(S.ficha, i, null, ['manzana','tipo','proyecto']))}
       ].concat(gruposEco(i), uds.length ? [{
         titulo:'Unidades del edificio · ' + nf(uds.length),
         color:info.color,
@@ -2179,6 +2191,7 @@ function abrirFicha(i, desdeConstruccion){
         accion:{texto:'Ver todas en la tabla', npn:npnEste}
       }] : [])
     }, 'f');
+    accionesQGIS(i);
     acomodarFichas();
     marcarFilaTabla(i);
     return;
@@ -2201,6 +2214,7 @@ function abrirFicha(i, desdeConstruccion){
                                   'area_const','n_unid','estado'])}
     ].concat(grupos)
   }, 'f');
+  accionesQGIS(i);
   acomodarFichas();
   marcarFilaTabla(i);
 }
@@ -2891,7 +2905,19 @@ function textoEco(c, v){
   return String(v);
 }
 
+/* en el portal economico los puntos usan la escala de calor
+   (verde -> rojo): las lineas de zona pasan a colores frios para no
+   confundirse con los datos. El portal de avance no cambia.        */
+const EST_ZONA_ECO = {
+  perimetro:{color:'#3b82f6', weight:2.4, opacity:.95, fillOpacity:0,
+             dashArray:'10,6'},
+  uit:      {color:'#ffffff', weight:2.4, opacity:.95, fillOpacity:0},
+  barrios:  {color:'#67e8f9', weight:1.3, opacity:.9, fillOpacity:0,
+             dashArray:'4,4'}
+};
+
 function prepararEconomico(){
+  Object.assign(EST_ZONA, EST_ZONA_ECO);
   S.eco.campos.forEach((c, j) => S.ecoCol[c.key] = j);
   if(S.ficha) S.ficha.campos.forEach((c, j) => S.fichaCol[c.key] = j);
 
@@ -3877,6 +3903,74 @@ function altoGaveta(px){
   setTimeout(() => map.invalidateSize(), 240);
 }
 
+/* ══════════ ENLACE CON QGIS ══════════
+
+   En la ficha de cada predio:
+   - "Copiar NPN": siempre.
+   - "Ver en QGIS": si el corte trae el proyecto de Mergin del predio.
+     Le manda al plugin de QGIS (en este mismo computador, direccion
+     127.0.0.1) el NPN y el proyecto; el plugin abre ese proyecto entre
+     los descargados con Mergin, hace zoom al predio y lo selecciona.
+     No pasa por internet.                                            */
+
+const PUERTO_QGIS = 47651;
+
+function accionesQGIS(i){
+  const c = document.getElementById('f-cuerpo');
+  const npn = S.tabla.filas[i][S.col.npn];
+  const proyecto = valorDe(S.ficha, i, 'proyecto');
+
+  const bar = document.createElement('div');
+  bar.className = 'acc-qgis';
+  const res = document.createElement('div');
+  res.className = 'res';
+
+  const bc = document.createElement('button');
+  bc.className = 'btn';
+  bc.textContent = 'Copiar NPN';
+  bc.onclick = async () => {
+    try{
+      await navigator.clipboard.writeText(npn);
+      res.textContent = 'NPN copiado.';
+    }catch(e){
+      res.textContent = 'No se pudo copiar: ' + npn;
+    }
+  };
+  bar.appendChild(bc);
+
+  if(proyecto){
+    const bq = document.createElement('button');
+    bq.className = 'btn';
+    bq.textContent = 'Ver en QGIS';
+    bq.title = 'Proyecto: ' + proyecto;
+    bq.onclick = () => verEnQGIS(npn, proyecto, bq, res);
+    bar.appendChild(bq);
+  }
+  bar.appendChild(res);
+
+  // debajo del estado del predio
+  const tira = c.querySelector('.tira-estado');
+  tira ? tira.after(bar) : c.prepend(bar);
+}
+
+async function verEnQGIS(npn, proyecto, boton, res){
+  boton.disabled = true;
+  res.textContent = 'Enviando a QGIS…';
+  const url = 'http://127.0.0.1:' + PUERTO_QGIS + '/ver?npn=' + encodeURIComponent(npn)
+            + '&proyecto=' + encodeURIComponent(proyecto);
+  try{
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 5000);
+    const r = await fetch(url, {signal:ctl.signal});
+    clearTimeout(t);
+    const j = await r.json();
+    res.textContent = j.msg || 'Enviado a QGIS.';
+  }catch(e){
+    res.textContent = 'QGIS no respondió. Ábrelo con el plugin "Geoportal → QGIS" activo.';
+  }
+  boton.disabled = false;
+}
+
 /* ══════════ VISTA 360° / 3D ══════════
 
    Un boton y un panel con dos visores: la foto 360 arriba y el modelo
@@ -3895,6 +3989,7 @@ const PANNELLUM = 'https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/';
 const CESIUM = 'https://cdn.jsdelivr.net/npm/cesium@1.105.1/Build/Cesium/';
 let capa360 = null, pannellumListo = null, cesiumListo = null;
 let visor3d = null, modelo3d = null, modeloUrl = null, uitsGeo = null;
+let marcaClic = null;
 
 function prepararVistas(){
   const b = document.getElementById('b-360');
@@ -3903,11 +3998,110 @@ function prepararVistas(){
   document.getElementById('sec360').hidden = !S.resumen.visor360;
   document.getElementById('sec3d').hidden = !S.resumen.visor3d;
   document.getElementById('p360-cerrar').onclick = cerrarVistas;
-  document.getElementById('p360-grande').onclick = () => {
-    document.getElementById('panel360').classList.toggle('grande');
-    if(S.visor360) setTimeout(() => S.visor360.resize(), 60);
-  };
+  document.getElementById('p360-grande').onclick = alternarGrande;
   capa360 = L.layerGroup([], {pane:'resalte'}).addTo(map);
+  ventanaMovible();
+}
+
+/* ── ventana movible, como el panel del plugin en QGIS ──
+   Se arrastra desde la barra de titulo y se cambia de tamano desde la
+   esquina de abajo a la derecha. El navegador recuerda donde quedo.
+   Doble clic en la barra la devuelve a su lugar original.           */
+
+const GEO_KEY = 'geoportal.panel360';
+const MIN_W = 320, MIN_H = 300;
+
+function geoGuardada(){
+  try{ return JSON.parse(localStorage.getItem(GEO_KEY) || 'null'); }catch(e){ return null; }
+}
+function guardarGeo(g){
+  try{ g ? localStorage.setItem(GEO_KEY, JSON.stringify(g))
+         : localStorage.removeItem(GEO_KEY); }catch(e){}
+}
+
+/* ajusta la ventana para que quede dentro de la pantalla */
+function aplicarGeo(g){
+  const p = document.getElementById('panel360');
+  if(!g){
+    p.style.left = p.style.top = p.style.width = p.style.height = p.style.right = '';
+    return;
+  }
+  const W = window.innerWidth, H = window.innerHeight;
+  const w = Math.min(Math.max(g.width, MIN_W), W - 16);
+  const h = Math.min(Math.max(g.height, MIN_H), H - 16);
+  const x = Math.min(Math.max(g.left, 8), W - w - 8);
+  const y = Math.min(Math.max(g.top, 8), H - h - 8);
+  Object.assign(p.style, {left:x + 'px', top:y + 'px', width:w + 'px',
+                          height:h + 'px', right:'auto'});
+}
+
+function geoActual(){
+  const r = document.getElementById('panel360').getBoundingClientRect();
+  return {left:r.left, top:r.top, width:r.width, height:r.height};
+}
+
+function redimensionarVisores(){
+  if(S.visor360) S.visor360.resize();
+  // Cesium se ajusta solo al tamano de su contenedor
+}
+
+function ventanaMovible(){
+  const p = document.getElementById('panel360');
+  const cab = p.querySelector('.cab');
+  const esq = document.getElementById('p360-redim');
+
+  const arrastre = (el, mover) => {
+    el.addEventListener('pointerdown', e => {
+      if(e.button !== 0 || e.target.closest('button')) return;
+      e.preventDefault();
+      if(p.classList.contains('grande')) return;
+      const ini = geoActual(), x0 = e.clientX, y0 = e.clientY;
+      el.setPointerCapture(e.pointerId);
+      document.body.classList.add('arrastrando');
+      const mov = ev => aplicarGeo(mover(ini, ev.clientX - x0, ev.clientY - y0));
+      const fin = () => {
+        el.removeEventListener('pointermove', mov);
+        el.removeEventListener('pointerup', fin);
+        el.removeEventListener('pointercancel', fin);
+        document.body.classList.remove('arrastrando');
+        guardarGeo(geoActual());
+        redimensionarVisores();
+      };
+      el.addEventListener('pointermove', mov);
+      el.addEventListener('pointerup', fin);
+      el.addEventListener('pointercancel', fin);
+    });
+  };
+  arrastre(cab, (g, dx, dy) => ({...g, left:g.left + dx, top:g.top + dy}));
+  arrastre(esq, (g, dx, dy) => ({...g, width:g.width + dx, height:g.height + dy}));
+
+  // doble clic en la barra: vuelve al lugar y tamano de siempre
+  cab.addEventListener('dblclick', e => {
+    if(e.target.closest('button')) return;
+    p.classList.remove('grande');
+    guardarGeo(null);
+    aplicarGeo(null);
+    setTimeout(redimensionarVisores, 60);
+  });
+
+  // si la pantalla cambia de tamano, la ventana no se sale
+  window.addEventListener('resize', () => {
+    const g = geoGuardada();
+    if(g && !p.classList.contains('grande')) aplicarGeo(g);
+  });
+}
+
+/* agrandar: ocupa casi toda la pantalla; otro clic la devuelve a donde estaba */
+function alternarGrande(){
+  const p = document.getElementById('panel360');
+  const grande = !p.classList.contains('grande');
+  p.classList.toggle('grande', grande);
+  if(grande){
+    p.style.left = p.style.top = p.style.width = p.style.height = p.style.right = '';
+  }else{
+    aplicarGeo(geoGuardada());
+  }
+  setTimeout(redimensionarVisores, 60);
 }
 
 function modo360(activo){
@@ -3974,13 +4168,19 @@ function cargarCesium(){
 function abrirVistas(){
   // la ficha y la vista 360/3D ocupan el mismo lugar
   if(S.seleccion !== null) cerrarFicha();
-  document.getElementById('panel360').classList.add('abierto');
+  const p = document.getElementById('panel360');
+  if(!p.classList.contains('abierto') && !p.classList.contains('grande'))
+    aplicarGeo(geoGuardada());
+  p.classList.add('abierto');
 }
 
 function consultar360(latlng){
   abrirVistas();
   capa360.clearLayers();
   cancelAnimationFrame(conoAnim);
+  // punto del clic: queda solo si no hay foto 360 (la foto trae su propio punto)
+  marcaClic = L.circleMarker(latlng, {pane:'resalte', radius:6, color:'#ffffff',
+    weight:2, fillColor:'#ef4444', fillOpacity:1, interactive:false}).addTo(capa360);
   if(S.resumen.visor360) foto360(latlng);
   if(S.resumen.visor3d) ir3D(latlng);
 }
@@ -4024,7 +4224,6 @@ async function foto360(latlng){
     return msgVista('360', 'No cargó el visor 360°.');
   }
   msgVista('360', null);
-  document.getElementById('p360-info').textContent = foto.split('/').pop();
 
   quitar360();
   S.visor360 = pannellum.viewer('pano', {
@@ -4034,6 +4233,7 @@ async function foto360(latlng){
   S.visor360.on('error', () => msgVista('360', 'No se pudo cargar la foto 360°.'));
 
   if(isFinite(lat) && isFinite(lon)){
+    if(marcaClic){ capa360.removeLayer(marcaClic); marcaClic = null; }
     // cono: hacia donde se esta mirando en la foto; gira con ella
     const cono = L.polygon([[lat, lon]], {pane:'resalte', interactive:false,
       color:'#f97316', weight:1.5, opacity:.9, fillColor:'#f97316',
@@ -4107,8 +4307,6 @@ async function uitEn(latlng){
 
 async function ir3D(latlng){
   const C = S.resumen.visor3d;
-  L.circleMarker(latlng, {pane:'resalte', radius:6, color:'#ffffff', weight:2,
-    fillColor:'#ef4444', fillOpacity:1, interactive:false}).addTo(capa360);
 
   const uit = await uitEn(latlng);
   if(!uit){
@@ -4148,35 +4346,48 @@ async function ir3D(latlng){
   volar3D(latlng.lat, latlng.lng, C.altura_m || 50);
 }
 
-/* igual que flyToHouse de Falcon: primero encima del punto a la altura
-   del modelo, luego mide la altura real ahi, baja y pone el cono rojo */
+/* Como flyToHouse de Falcon, con dos cambios:
+   - siempre vuela al punto del clic. Falcon, si el punto queda lejos del
+     centro del modelo, muestra el modelo completo; con modelos alargados
+     eso pasaba aunque el punto si estuviera cubierto.
+   - para medir la altura del modelo en el punto espera a que carguen sus
+     piezas (hasta 10 s), en vez de medir una sola vez a los 0,5 s.     */
+let vueloId = 0;
 function volar3D(lat, lon, alto){
-  const v = visor3d, ts = modelo3d;
-  const destino = Cesium.Cartesian3.fromDegrees(lon, lat, 0);
+  const v = visor3d, ts = modelo3d, id = ++vueloId;
   const centro = ts.boundingSphere.center;
-  if(Cesium.Cartesian3.distance(centro, destino) > ts.boundingSphere.radius * 0.8){
-    v.flyTo(ts);
-    return;
-  }
   const altoModelo = Cesium.Cartographic.fromCartesian(centro).height;
+  console.info('3D', {punto:[lat, lon],
+    distancia_m:Math.round(Cesium.Cartesian3.distance(centro, Cesium.Cartesian3.fromDegrees(lon, lat, altoModelo))),
+    radio_modelo_m:Math.round(ts.boundingSphere.radius)});
+  v.entities.removeAll();
+
   v.camera.flyTo({
     destination:Cesium.Cartesian3.fromDegrees(lon, lat, altoModelo + alto),
     duration:2.0,
-    complete:() => setTimeout(() => {
-      let h;
-      try{ h = v.scene.sampleHeight(Cesium.Cartographic.fromDegrees(lon, lat)); }catch(e){}
-      if(!h || h === altoModelo) return;
-      v.entities.removeAll();
-      v.entities.add({
-        position:Cesium.Cartesian3.fromDegrees(lon, lat, h + 15),
-        cylinder:{length:4.0, topRadius:1.0, bottomRadius:0.0,
-                  material:Cesium.Color.RED.withAlpha(0.8), outline:true,
-                  outlineColor:Cesium.Color.WHITE,
-                  heightReference:Cesium.HeightReference.NONE}
-      });
-      v.camera.flyTo({destination:Cesium.Cartesian3.fromDegrees(lon, lat, h + alto),
-                      duration:2.0});
-    }, 500)
+    complete:() => {
+      let intentos = 0;
+      const medir = () => {
+        if(id !== vueloId) return;               // ya se hizo otro clic
+        let h;
+        try{ h = v.scene.sampleHeight(Cesium.Cartographic.fromDegrees(lon, lat)); }catch(e){}
+        if(h !== undefined && h !== null && isFinite(h)){
+          v.entities.add({
+            position:Cesium.Cartesian3.fromDegrees(lon, lat, h + 15),
+            cylinder:{length:4.0, topRadius:1.0, bottomRadius:0.0,
+                      material:Cesium.Color.RED.withAlpha(0.8), outline:true,
+                      outlineColor:Cesium.Color.WHITE,
+                      heightReference:Cesium.HeightReference.NONE}
+          });
+          v.camera.flyTo({destination:Cesium.Cartesian3.fromDegrees(lon, lat, h + alto),
+                          duration:2.0});
+          return;
+        }
+        if(++intentos < 20){ setTimeout(medir, 500); return; }
+        if(ts.tilesLoaded) msgVista('3d', 'El modelo 3D no cubre este punto.');
+      };
+      setTimeout(medir, 500);
+    }
   });
 }
 
@@ -4184,6 +4395,7 @@ function cerrarVistas(){
   const p = document.getElementById('panel360');
   if(!p || !p.classList.contains('abierto')) return;
   p.classList.remove('abierto', 'grande');
+  aplicarGeo(geoGuardada());
   quitar360();
   cancelAnimationFrame(conoAnim);
   if(visor3d) visor3d.entities.removeAll();
