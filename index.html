@@ -3986,7 +3986,8 @@ async function verEnQGIS(npn, proyecto, boton, res){
             + '&proyecto=' + encodeURIComponent(proyecto);
   try{
     const ctl = new AbortController();
-    const t = setTimeout(() => ctl.abort(), 5000);
+    // si el proyecto no esta descargado, QGIS consulta al servidor antes de responder
+    const t = setTimeout(() => ctl.abort(), 20000);
     const r = await fetch(url, {signal:ctl.signal});
     clearTimeout(t);
     const j = await r.json();
