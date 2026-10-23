@@ -974,7 +974,11 @@ async function arrancar(){
     document.getElementById('carga').style.display = 'none';
     abrirCajon('cabecera');
     acomodarFichas();
-    if(!S.ficha) traer('ficha.json', false).then(f => { S.ficha = f; });
+    if(!S.ficha) traer('ficha.json', false).then(f => {
+      S.ficha = f;
+      // portal de avance: la tabla dinamica usa campos de la ficha
+      if(!S.eco) prepararPivoteAvance();
+    });
     cargarZonas();
   }catch(e){
     document.getElementById('carga').innerHTML =
@@ -2426,7 +2430,7 @@ function pintarEncabezadoTabla(){
 
 function pintarTabla(){
   if(!document.getElementById('gaveta').classList.contains('abierta')) return;
-  if(S.eco && S.vista === 'pivote') return pintarPivote();
+  if(S.vista === 'pivote') return pintarPivote();
 
   let base;
   if(S.ambito === 'vis' && map.getZoom() >= CFG.zoomPuntos){
@@ -2555,7 +2559,7 @@ function abrirGaveta(){
   document.documentElement.style.setProperty('--gaveta','290px');
   setTimeout(() => map.invalidateSize(), 240);
   pintarTabla();
-  if(S.eco && S.vista === 'pivote') altoGaveta(altoPivote());
+  if(S.vista === 'pivote') altoGaveta(altoPivote());
 }
 function cerrarGaveta(){
   gaveta.classList.remove('abierta');
@@ -2585,7 +2589,8 @@ document.getElementById('g-vis').onclick = function(){
 };
 
 document.getElementById('g-csv').onclick = () => {
-  if(S.eco) return S.vista === 'pivote' ? csvPivote() : csvEco();
+  if(S.vista === 'pivote') return csvPivote();
+  if(S.eco) return csvEco();
   const cab = COLS.map(k => (S.tabla.campos.find(c => c.key === k) || {label:k}).label);
   const lin = [cab.join(';')];
   for(const i of listaTabla){
@@ -3007,6 +3012,47 @@ function prepararEconomico(){
   prepararPivote();
 }
 
+/* ══════════ TABLA DINAMICA DEL PORTAL DE AVANCE ══════════
+
+   La misma tabla dinamica del portal economico, con los campos del
+   avance (sin datos economicos). Arranca cuando llega ficha.json.
+   Las matrices PH no cuentan: sus unidades si.                     */
+function prepararPivoteAvance(){
+  if(S.ficha) S.ficha.campos.forEach((c, j) => S.fichaCol[c.key] = j);
+
+  // matrices PH: solo aportan el lote, no cuentan en la tabla dinamica
+  const iN = S.col.npn;
+  S.tabla.filas.forEach(f => {
+    const n = f[iN];
+    if(!n || n.length !== 30 || n[21] < '8' || n.slice(22) === '00000000') return;
+    const k = indiceDe(n.slice(0, 22) + '00000000');
+    if(k === undefined) return;
+    S.esMatriz.add(k);
+    if(!S.hijasDe.has(k)) S.hijasDe.set(k, []);
+    S.hijasDe.get(k).push(indiceDe(n));
+  });
+
+  // el filtro inicial del economico (Sin liquidacion) aqui no aplica
+  S.pivote.filtros = [];
+
+  // la gaveta tiene dos vistas: la tabla de predios y la dinamica
+  document.getElementById('g-vista').hidden = false;
+  document.getElementById('g-tit').style.display = 'none';
+  for(const b of document.querySelectorAll('#g-vista button')){
+    b.onclick = () => {
+      S.vista = b.dataset.v;
+      for(const x of document.querySelectorAll('#g-vista button'))
+        x.classList.toggle('on', x === b);
+      document.getElementById('scroll').hidden = S.vista !== 'predios';
+      document.getElementById('pivote').hidden = S.vista !== 'pivote';
+      if(gaveta.classList.contains('abierta'))
+        altoGaveta(S.vista === 'pivote' ? altoPivote() : 290);
+      pintarTabla();
+    };
+  }
+  prepararPivote();
+}
+
 /* ── condicion del predio: posicion 22 del NPN ── */
 
 const CONDICION = {
@@ -3271,6 +3317,14 @@ function dimensiones(){
   if(S.fichaCol.manzana !== undefined) add('manzana', 'Manzana');
   if(S.fichaCol.tipo !== undefined) add('tipo', 'Tipo de predio');
   add('condicion', 'Condición del predio');
+  if(!S.eco){
+    // portal de avance: sus propios campos, sin datos economicos
+    add('estado', 'Estado de avance');
+    if(S.col.entrega !== undefined) add('entrega', 'Entrega');
+    if(S.fichaCol.proyecto !== undefined) add('proyecto', 'Proyecto');
+    if(S.fichaCol.fecha_ent !== undefined) add('fecha_ent', 'Fecha de entrega');
+    return d;
+  }
   add('estado', 'Liquidación');
   for(const c of S.eco.campos){
     if(c.tipo === 'dominio' || c.dimension) add(c.key, c.label);
@@ -3281,6 +3335,14 @@ function dimensiones(){
 
 function valoresPivote(){
   const v = [{k:'__n', label:'Predios (conteo)'}];
+  if(!S.eco){
+    // portal de avance: los numericos de la ficha
+    for(const k of ['n_unid', 'n_inter']){
+      if(S.fichaCol[k] !== undefined)
+        v.push({k:k, label:S.ficha.campos[S.fichaCol[k]].label});
+    }
+    return v;
+  }
   for(const c of S.eco.campos){
     if(c.tipo === 'num' && !c.dimension) v.push({k:c.key, label:c.label});
   }
@@ -3658,7 +3720,8 @@ function calcularPivote(){
     const fl = P.filas.map(k => etiquetaDim(k, valorCampo(i, k)));
     const ck = nC ? P.cols.map(k => etiquetaDim(k, valorCampo(i, k))).join(SEP) : '';
     colKeys.add(ck);
-    const vs = vals.map(v => v.k === '__n' ? null : ecoVal(i, v.k));
+    const vs = vals.map(v => v.k === '__n' ? null
+                             : (S.eco ? ecoVal(i, v.k) : fichaVal(i, v.k)));
 
     for(let L = 0; L <= nF; L++){
       const pk = L + SEP + fl.slice(0, L).join(SEP);
@@ -3723,7 +3786,8 @@ function resultado(a, v){
 function textoPivote(x, v){
   if(x === null || x === undefined) return '';
   if(v.k === '__n' || v.op === 'conteo') return fmt(x, 0);
-  const c = campoEco(v.k);
+  const c = S.eco ? campoEco(v.k)
+                  : (S.ficha.campos[S.fichaCol[v.k]] || {});
   const dec = v.op === 'promedio' ? Math.max(c.dec || 0, 1) : (c.dec || 0);
   const t = fmt(x, dec);
   return c.moneda ? '$ ' + t : t;
