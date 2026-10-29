@@ -4078,6 +4078,14 @@ async function verEnQGIS(npn, proyecto, boton, res){
 
 const PANNELLUM = 'https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/';
 const CESIUM = 'https://cdn.jsdelivr.net/npm/cesium@1.105.1/Build/Cesium/';
+/* zoom del visor 3D: ajustar aqui
+   ZOOM3D_FACTOR: cuanto avanza cada vuelta de rueda (Cesium trae 5;
+                  mas bajo = mas suave, hacen falta mas vueltas)
+   ZOOM3D_MIN_M:  lo mas cerca que puede quedar la camara (metros)
+   ZOOM3D_MAX_M:  lo mas lejos que puede alejarse (metros)          */
+const ZOOM3D_FACTOR = 1.5;
+const ZOOM3D_MIN_M  = 2;
+const ZOOM3D_MAX_M  = 500;
 let capa360 = null, pannellumListo = null, cesiumListo = null;
 let visor3d = null, modelo3d = null, modeloUrl = null, uitsGeo = null;
 let marcaClic = null;
@@ -4422,6 +4430,10 @@ async function ir3D(latlng){
       });
       // solo el modelo: sin globo ni mapa base (esos piden llave de Cesium)
       visor3d.scene.globe.show = false;
+      const ctl = visor3d.scene.screenSpaceCameraController;
+      ctl.zoomFactor = ZOOM3D_FACTOR;
+      ctl.minimumZoomDistance = ZOOM3D_MIN_M;
+      ctl.maximumZoomDistance = ZOOM3D_MAX_M;
     }
     if(modeloUrl !== url){
       if(modelo3d){ visor3d.scene.primitives.remove(modelo3d); modelo3d = null; }
