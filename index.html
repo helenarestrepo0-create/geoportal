@@ -4079,13 +4079,17 @@ async function verEnQGIS(npn, proyecto, boton, res){
 const PANNELLUM = 'https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/';
 const CESIUM = 'https://cdn.jsdelivr.net/npm/cesium@1.105.1/Build/Cesium/';
 /* zoom del visor 3D: ajustar aqui
-   ZOOM3D_FACTOR: cuanto avanza cada vuelta de rueda (Cesium trae 5;
-                  mas bajo = mas suave, hacen falta mas vueltas)
-   ZOOM3D_MIN_M:  lo mas cerca que puede quedar la camara (metros)
-   ZOOM3D_MAX_M:  lo mas lejos que puede alejarse (metros)          */
-const ZOOM3D_FACTOR = 1.5;
+   ZOOM3D_PASO:   que parte de la distancia al punto bajo el cursor
+                  avanza cada vuelta de rueda (0.15 = 15 %; mas bajo =
+                  mas suave, hacen falta mas vueltas)
+   ZOOM3D_MIN_M:  lo mas cerca que la rueda deja llegar al modelo (metros)
+   ZOOM3D_MAX_M:  lo mas lejos que la rueda deja alejarse (metros)
+   ZOOM3D_FACTOR: zoom con clic derecho arrastrando y con dos dedos
+                  (Cesium trae 5; mas bajo = mas suave)                */
+const ZOOM3D_PASO   = 0.15;
 const ZOOM3D_MIN_M  = 2;
 const ZOOM3D_MAX_M  = 500;
+const ZOOM3D_FACTOR = 1.5;
 let capa360 = null, pannellumListo = null, cesiumListo = null;
 let visor3d = null, modelo3d = null, modeloUrl = null, uitsGeo = null;
 let marcaClic = null;
@@ -4432,8 +4436,11 @@ async function ir3D(latlng){
       visor3d.scene.globe.show = false;
       const ctl = visor3d.scene.screenSpaceCameraController;
       ctl.zoomFactor = ZOOM3D_FACTOR;
-      ctl.minimumZoomDistance = ZOOM3D_MIN_M;
-      ctl.maximumZoomDistance = ZOOM3D_MAX_M;
+      // la rueda la maneja zoomRueda3D: Cesium, sin globo, mide el paso
+      // con la altura sobre el elipsoide y no con la distancia al modelo
+      ctl.zoomEventTypes = [Cesium.CameraEventType.RIGHT_DRAG,
+                            Cesium.CameraEventType.PINCH];
+      visor3d.scene.canvas.addEventListener('wheel', zoomRueda3D, {passive:false});
     }
     if(modeloUrl !== url){
       if(modelo3d){ visor3d.scene.primitives.remove(modelo3d); modelo3d = null; }
@@ -4447,6 +4454,47 @@ async function ir3D(latlng){
   }
   msgVista('3d', null);
   volar3D(latlng.lat, latlng.lng, C.altura_m || 50);
+}
+
+/* zoom con la rueda: avanza hacia el punto del modelo que esta bajo el
+   cursor una parte fija de la distancia a ese punto (ZOOM3D_PASO), sin
+   acercarse a menos de ZOOM3D_MIN_M ni alejarse a mas de ZOOM3D_MAX_M. */
+function zoomRueda3D(e){
+  e.preventDefault();
+  const v = visor3d;
+  if(!v) return;
+  const cam = v.camera;
+  const r = v.scene.canvas.getBoundingClientRect();
+  const pos = new Cesium.Cartesian2(e.clientX - r.left, e.clientY - r.top);
+
+  let dir, dist;
+  let punto;
+  try{ punto = v.scene.pickPositionSupported ? v.scene.pickPosition(pos) : undefined; }catch(err){}
+  if(punto){
+    dir = Cesium.Cartesian3.subtract(punto, cam.positionWC, new Cesium.Cartesian3());
+    dist = Cesium.Cartesian3.magnitude(dir);
+    if(!(dist > 0)) return;
+    Cesium.Cartesian3.normalize(dir, dir);
+  }else{
+    // el cursor no esta sobre el modelo: va en la direccion del cursor y
+    // mide contra el centro del modelo
+    if(!modelo3d) return;
+    dir = cam.getPickRay(pos).direction;
+    dist = Cesium.Cartesian3.distance(cam.positionWC, modelo3d.boundingSphere.center);
+  }
+
+  // una muesca de rueda = 1 paso; touchpad = fracciones de paso
+  const px = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 100 : e.deltaY;
+  const pasos = Math.max(-1, Math.min(1, px / 100));
+  if(!pasos) return;
+
+  if(pasos < 0){
+    const avance = Math.min(dist * ZOOM3D_PASO * -pasos, dist - ZOOM3D_MIN_M);
+    if(avance > 0) cam.move(dir, avance);
+  }else{
+    const retroceso = Math.min(dist * ZOOM3D_PASO * pasos, ZOOM3D_MAX_M - dist);
+    if(retroceso > 0) cam.move(dir, -retroceso);
+  }
 }
 
 /* Como flyToHouse de Falcon, con dos cambios:
