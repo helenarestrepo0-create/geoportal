@@ -300,6 +300,15 @@ body.arrastrando #pano, body.arrastrando #cesium3d{pointer-events:none}
 #panel360 .sec-tit span{text-transform:none;letter-spacing:0;font-size:11px;
   color:var(--texto-2);font-family:ui-monospace,monospace}
 #pano, #cesium3d{flex:1;min-height:0;background:#000;position:relative}
+.mappergis-marca{display:flex;align-items:center;gap:9px;padding:7px 12px 7px 8px;
+  background:#0e141a;border:1px solid rgba(255,255,255,.22);border-radius:6px;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);color:#fff;
+  font-size:16px;font-weight:700;line-height:1.2;white-space:nowrap;
+  pointer-events:none}
+.mappergis-marca img{display:block;width:32px;height:32px}
+#panel360 .mappergis-marca{position:absolute;right:18px;bottom:8px;z-index:4;
+  gap:6px;padding:4px 8px 4px 5px;font-size:13px}
+#panel360 .mappergis-marca img{width:23px;height:23px}
 #panel360 .msg{position:absolute;left:0;right:0;top:28px;bottom:0;display:flex;
   align-items:center;justify-content:center;text-align:center;padding:20px;
   color:var(--texto-2);font-size:12.5px;background:rgba(0,0,0,.72);z-index:5}
@@ -694,11 +703,13 @@ table.tot.cond td + td{padding-left:8px}
   <div class="sec" id="sec360" hidden>
     <div class="sec-tit">Foto 360°</div>
     <div id="pano"></div>
+    <div class="mappergis-marca"><img src="./mappergis.svg" alt="">MapperGIS</div>
     <div class="msg" id="msg360" hidden></div>
   </div>
   <div class="sec" id="sec3d" hidden>
     <div class="sec-tit">Modelo 3D <span id="p3d-info"></span></div>
     <div id="cesium3d"></div>
+    <div class="mappergis-marca"><img src="./mappergis.svg" alt="">MapperGIS</div>
     <div class="msg" id="msg3d" hidden></div>
   </div>
   <div class="redim" id="p360-redim" title="Cambiar tamaño"></div>
@@ -833,6 +844,13 @@ const map = L.map('mapa',{
   center:CFG.centro, zoom:CFG.zoom, minZoom:9, maxZoom:22,
   preferCanvas:true, zoomControl:false
 });
+const marcaMapperGIS = L.control({position:'bottomright'});
+marcaMapperGIS.onAdd = () => {
+  const marca = L.DomUtil.create('div', 'mappergis-marca');
+  marca.innerHTML = '<img src="./mappergis.svg" alt="">MapperGIS';
+  return marca;
+};
+marcaMapperGIS.addTo(map);
 L.control.zoom({position:'bottomright'}).addTo(map);
 const escala = L.control.scale({imperial:false, position:'bottomleft',
                                 maxWidth:120}).addTo(map);
@@ -4458,43 +4476,70 @@ async function ir3D(latlng){
 
 /* zoom con la rueda: avanza hacia el punto del modelo que esta bajo el
    cursor una parte fija de la distancia a ese punto (ZOOM3D_PASO), sin
-   acercarse a menos de ZOOM3D_MIN_M ni alejarse a mas de ZOOM3D_MAX_M. */
+   acercarse a menos de ZOOM3D_MIN_M ni alejarse a mas de ZOOM3D_MAX_M.
+   El movimiento se reparte en varios cuadros para que se vea fluido, y
+   el punto se busca una sola vez por gesto (buscarlo en cada evento de
+   la rueda es lo que hace pesado el visor).                          */
+let zoom3D = null;          // gesto en curso: {punto, dir, pendiente, ultimo}
+let zoom3DAnim = 0;
+
 function zoomRueda3D(e){
   e.preventDefault();
   const v = visor3d;
   if(!v) return;
   const cam = v.camera;
-  const r = v.scene.canvas.getBoundingClientRect();
-  const pos = new Cesium.Cartesian2(e.clientX - r.left, e.clientY - r.top);
+  const ahora = performance.now();
 
-  let dir, dist;
-  let punto;
-  try{ punto = v.scene.pickPositionSupported ? v.scene.pickPosition(pos) : undefined; }catch(err){}
-  if(punto){
-    dir = Cesium.Cartesian3.subtract(punto, cam.positionWC, new Cesium.Cartesian3());
-    dist = Cesium.Cartesian3.magnitude(dir);
-    if(!(dist > 0)) return;
-    Cesium.Cartesian3.normalize(dir, dir);
-  }else{
-    // el cursor no esta sobre el modelo: va en la direccion del cursor y
-    // mide contra el centro del modelo
-    if(!modelo3d) return;
-    dir = cam.getPickRay(pos).direction;
-    dist = Cesium.Cartesian3.distance(cam.positionWC, modelo3d.boundingSphere.center);
+  // gesto nuevo si paso un rato sin rueda: se busca el punto bajo el cursor
+  if(!zoom3D || ahora - zoom3D.ultimo > 300){
+    const r = v.scene.canvas.getBoundingClientRect();
+    const pos = new Cesium.Cartesian2(e.clientX - r.left, e.clientY - r.top);
+    let punto;
+    try{ punto = v.scene.pickPositionSupported ? v.scene.pickPosition(pos) : undefined; }catch(err){}
+    let dir;
+    if(punto){
+      dir = Cesium.Cartesian3.subtract(punto, cam.positionWC, new Cesium.Cartesian3());
+      if(!(Cesium.Cartesian3.magnitude(dir) > 0)) return;
+      Cesium.Cartesian3.normalize(dir, dir);
+    }else{
+      // el cursor no esta sobre el modelo: va en la direccion del cursor y
+      // mide contra el centro del modelo
+      if(!modelo3d) return;
+      dir = Cesium.Cartesian3.clone(cam.getPickRay(pos).direction);
+    }
+    zoom3D = {punto:punto || null, dir, pendiente:0, ultimo:ahora};
   }
+  zoom3D.ultimo = ahora;
 
   // una muesca de rueda = 1 paso; touchpad = fracciones de paso
   const px = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 100 : e.deltaY;
   const pasos = Math.max(-1, Math.min(1, px / 100));
   if(!pasos) return;
 
+  // distancia como quedara cuando termine lo que ya esta en camino
+  const ref = zoom3D.punto || modelo3d.boundingSphere.center;
+  const dist = Cesium.Cartesian3.distance(cam.positionWC, ref) - zoom3D.pendiente;
+
   if(pasos < 0){
     const avance = Math.min(dist * ZOOM3D_PASO * -pasos, dist - ZOOM3D_MIN_M);
-    if(avance > 0) cam.move(dir, avance);
+    if(avance > 0) zoom3D.pendiente += avance;
   }else{
     const retroceso = Math.min(dist * ZOOM3D_PASO * pasos, ZOOM3D_MAX_M - dist);
-    if(retroceso > 0) cam.move(dir, -retroceso);
+    if(retroceso > 0) zoom3D.pendiente -= retroceso;
   }
+  if(!zoom3DAnim) zoom3DAnim = requestAnimationFrame(animarZoom3D);
+}
+
+/* cada cuadro recorre una parte de lo pendiente: arranca rapido y frena */
+function animarZoom3D(){
+  zoom3DAnim = 0;
+  if(!visor3d || !zoom3D) return;
+  const g = zoom3D;
+  if(Math.abs(g.pendiente) < 0.01){ g.pendiente = 0; return; }
+  const tramo = g.pendiente * 0.2;
+  visor3d.camera.move(g.dir, tramo);
+  g.pendiente -= tramo;
+  zoom3DAnim = requestAnimationFrame(animarZoom3D);
 }
 
 /* Como flyToHouse de Falcon, con dos cambios:
