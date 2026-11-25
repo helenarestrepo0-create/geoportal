@@ -124,6 +124,15 @@ table.tot tr.off{opacity:.3}
 .campo select:focus,
 .campo input[type="search"]:focus{border-color:var(--foco);outline:none}
 .campo input::placeholder{color:var(--texto-3)}
+.campo textarea{
+  width:100%;background:#0a1016;border:1px solid var(--linea);color:var(--texto);
+  border-radius:4px;padding:6px 9px;font-size:12px;resize:vertical;
+  font-family:ui-monospace,Consolas,monospace;transition:border-color .15s;
+}
+.campo textarea:hover{border-color:var(--linea-2)}
+.campo textarea:focus{border-color:var(--foco);outline:none}
+.campo textarea::placeholder{color:var(--texto-3)}
+#b-lista{margin-top:4px}
 .lista-sel{
   border:1px solid var(--linea);border-radius:4px;background:#0a1016;
   max-height:132px;overflow-y:auto;overflow-x:hidden;margin-top:3px;
@@ -633,6 +642,12 @@ table.tot.cond td + td{padding-left:8px}
     <div id="sugerencias"></div>
   </div>
   <div class="campo">
+    <label for="q-lista">Lista de NPN</label>
+    <textarea id="q-lista" rows="3"
+      placeholder="Pega los NPN (uno por línea, coma o espacio)"></textarea>
+    <button class="btn" id="b-lista">Filtrar por lista</button>
+  </div>
+  <div class="campo">
     <label>Unidad de intervención</label>
     <div class="lista-sel" id="f-uit"></div>
   </div>
@@ -817,7 +832,7 @@ const S = {
   puntos:[], indice:null,
   porFila:new Map(), col:{}, val:null,
   idx:{},
-  filtros:{uit:new Set(), barrio:new Set(), entrega:new Set(), manzana:''},
+  filtros:{uit:new Set(), barrio:new Set(), entrega:new Set(), manzana:'', npns:null},
   ocultos:new Set(),
   visibles:null,
   seleccion:null, hover:null,
@@ -917,6 +932,12 @@ document.querySelectorAll('#barra button[data-cajon]').forEach(b =>
 
 document.getElementById('b-aoi').onclick = irAlAoi;
 document.getElementById('b-limpiar').onclick = limpiarFiltros;
+document.getElementById('b-lista').onclick = () => {
+  const v = document.getElementById('q-lista').value
+              .split(/[\s,;]+/).filter(Boolean);
+  S.filtros.npns = v.length ? new Set(v) : null;
+  aplicarFiltros();
+};
 
 /* ══════════ AREA DE INTERES ══════════
    El contorno real de la ortofoto, extraido de sus teselas. Marca hasta
@@ -1103,6 +1124,14 @@ function aplicarFiltros(){
     cruzar(s);
   }
 
+  if(f.npns){
+    const s = new Set(), iN = S.col.npn;
+    S.tabla.filas.forEach((fila, i) => {
+      if(f.npns.has(String(fila[iN]))) s.add(i);
+    });
+    cruzar(s);
+  }
+
   // categorias apagadas en la leyenda del tematico (portal economico)
   if(S.eco && S.temaOff.size){
     const s = new Set();
@@ -1238,6 +1267,11 @@ function pintarChips(){
   for(const v of f.entrega) chip(ETQ[v], () => quitar('entrega', v));
   if(f.manzana) chip('Manzana <b>' + f.manzana + '</b>',
                      () => quitar('manzana', null));
+  if(f.npns) chip('Lista · <b>' + f.npns.size + '</b> NPN', () => {
+    f.npns = null;
+    document.getElementById('q-lista').value = '';
+    aplicarFiltros();
+  });
   if(S.eco && S.temaOff.size){
     chip('<b>' + TEMAS[S.tema].label + '</b> · ' + S.temaOff.size
          + (S.temaOff.size === 1 ? ' categoría oculta' : ' categorías ocultas'),
@@ -1252,7 +1286,7 @@ function pintarChips(){
 
   // el boton de limpiar vive fijo en el panel: solo se habilita
   const hay = !!(f.uit.size || f.barrio.size || f.entrega.size
-                 || f.manzana || S.filtroEdificio
+                 || f.manzana || f.npns || S.filtroEdificio
                  || (S.eco && S.temaOff.size));
   const b = document.getElementById('b-limpiar');
   if(b) b.disabled = !hay;
@@ -1264,6 +1298,8 @@ function limpiarFiltros(){
   S.filtros.barrio.clear();
   S.filtros.entrega.clear();
   S.filtros.manzana = '';
+  S.filtros.npns = null;
+  document.getElementById('q-lista').value = '';
   if(S.eco){ S.temaOff.clear(); pintarLeyendaTema(); }
   document.getElementById('q').value = '';
   for(const id of ['f-uit', 'f-barrio', 'f-entrega']){
